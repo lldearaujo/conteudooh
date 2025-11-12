@@ -203,10 +203,14 @@ function ajustarTamanhoFonte(elemento) {
             // Para telas muito pequenas (128x192px), usar limites mais restritivos
             const telaMuitoPequena = larguraTela <= 140 && alturaTela <= 200;
             
+            // Declarar tamanhoMinimo e tamanhoMaximo no escopo correto
+            let tamanhoMinimo;
+            let tamanhoMaximo;
+            
             if (telaMuitoPequena) {
                 // Limites proporcionais para telas 128x192px (mantendo proporção das outras telas)
-                const tamanhoMinimo = 7; // Mínimo proporcional
-                const tamanhoMaximo = 12; // Máximo proporcional
+                tamanhoMinimo = 7; // Mínimo proporcional
+                tamanhoMaximo = 12; // Máximo proporcional
                 
                 // Forçar tamanho menor para telas muito pequenas
                 if (tamanhoFonte > tamanhoMaximo) {
@@ -216,8 +220,8 @@ function ajustarTamanhoFonte(elemento) {
                 lineHeight = 1.05; // Line-height mais compacto
             } else {
                 // Usar valores do CSS como base para telas maiores
-                const tamanhoMinimo = Math.max(12, tamanhoFonte * 0.5); // Mínimo razoável (50% do CSS)
-                const tamanhoMaximo = 42; // Máximo do CSS
+                tamanhoMinimo = Math.max(12, tamanhoFonte * 0.5); // Mínimo razoável (50% do CSS)
+                tamanhoMaximo = 42; // Máximo do CSS
                 
                 // Não reduzir o tamanho se o CSS já definiu um valor bom
                 if (tamanhoFonte > tamanhoMaximo) {
