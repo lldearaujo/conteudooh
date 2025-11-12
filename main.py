@@ -150,11 +150,14 @@ async def toggle_noticia(noticia_id: int, db: Session = Depends(get_db)):
 async def gerar_qrcode_noticia(noticia_id: int, db: Session = Depends(get_db)):
     """Gera um QR code do link da matéria - otimizado para telas de baixa resolução"""
     try:
+        print(f"[QR Code] Requisição recebida para notícia ID: {noticia_id}")
         noticia = db.query(Noticia).filter(Noticia.id == noticia_id).first()
         if not noticia:
+            print(f"[QR Code] Notícia {noticia_id} não encontrada")
             raise HTTPException(status_code=404, detail="Notícia não encontrada")
         
         if not noticia.url:
+            print(f"[QR Code] Notícia {noticia_id} não tem URL")
             raise HTTPException(status_code=400, detail="URL da notícia não disponível")
         
         # Garantir que a URL seja válida e completa
@@ -168,7 +171,7 @@ async def gerar_qrcode_noticia(noticia_id: int, db: Session = Depends(get_db)):
             else:
                 url = 'https://' + url
         
-        print(f"Gerando QR code para URL: {url}")
+        print(f"[QR Code] Gerando QR code para URL: {url}")
         
         # Criar QR code - otimizado para telas de baixa resolução e escaneamento à distância
         qr = qrcode.QRCode(
@@ -188,14 +191,25 @@ async def gerar_qrcode_noticia(noticia_id: int, db: Session = Depends(get_db)):
         img.save(img_bytes, format='PNG', optimize=False)
         img_bytes.seek(0)
         
-        print(f"QR code gerado com sucesso. Tamanho: {len(img_bytes.getvalue())} bytes")
+        tamanho_bytes = len(img_bytes.getvalue())
+        print(f"[QR Code] QR code gerado com sucesso. Tamanho: {tamanho_bytes} bytes")
         
-        return Response(content=img_bytes.getvalue(), media_type="image/png")
+        # Adicionar headers para evitar cache e garantir que a imagem seja servida corretamente
+        headers = {
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Pragma": "no-cache",
+            "Expires": "0"
+        }
+        
+        return Response(content=img_bytes.getvalue(), media_type="image/png", headers=headers)
+    except HTTPException:
+        raise
     except Exception as e:
         import traceback
-        print(f"Erro ao gerar QR code: {e}")
+        error_msg = f"Erro ao gerar QR code: {e}"
+        print(f"[QR Code] ERRO: {error_msg}")
         print(traceback.format_exc())
-        raise HTTPException(status_code=500, detail=f"Erro ao gerar QR code: {str(e)}")
+        raise HTTPException(status_code=500, detail=error_msg)
 
 if __name__ == "__main__":
     import uvicorn

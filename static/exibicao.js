@@ -74,23 +74,33 @@ function exibirNoticia(noticia) {
     const qrcodeImage = document.getElementById('qrcode-image-bottom');
     const qrcodeContainer = document.getElementById('qrcode-container-bottom');
     if (noticia.id && noticia.url) {
-        // Garantir que a URL seja absoluta se necessário
+        // Garantir que a URL seja absoluta - usar caminho relativo que funciona em qualquer ambiente
         const qrcodeUrl = `/api/noticias/${noticia.id}/qrcode`;
+        
+        console.log('Tentando carregar QR code:', qrcodeUrl, 'Notícia ID:', noticia.id);
         
         // Limpar handlers anteriores
         qrcodeImage.onerror = null;
         qrcodeImage.onload = null;
         
         // Configurar handlers de erro e sucesso
-        qrcodeImage.onerror = function() {
+        qrcodeImage.onerror = function(e) {
             console.error('Erro ao carregar QR code:', qrcodeUrl);
+            console.error('Detalhes do erro:', e);
+            console.error('Status da imagem:', this.complete, this.naturalWidth, this.naturalHeight);
             this.style.display = 'none';
             if (qrcodeContainer) {
                 qrcodeContainer.style.display = 'none';
             }
+            // Tentar carregar novamente após 2 segundos
+            setTimeout(() => {
+                console.log('Tentando recarregar QR code...');
+                this.src = qrcodeUrl + '?t=' + Date.now();
+            }, 2000);
         };
         
         qrcodeImage.onload = function() {
+            console.log('QR code carregado com sucesso:', qrcodeUrl);
             this.style.display = 'block';
             if (qrcodeContainer) {
                 qrcodeContainer.style.display = 'flex';
@@ -106,9 +116,10 @@ function exibirNoticia(noticia) {
         qrcodeImage.style.display = 'block';
         qrcodeImage.style.visibility = 'visible';
         
-        // Definir src após configurar os handlers
-        qrcodeImage.src = qrcodeUrl;
+        // Adicionar timestamp para evitar cache
+        qrcodeImage.src = qrcodeUrl + '?t=' + Date.now();
     } else {
+        console.warn('QR code não pode ser gerado - ID ou URL ausente:', { id: noticia.id, url: noticia.url });
         if (qrcodeImage) qrcodeImage.style.display = 'none';
         if (qrcodeContainer) qrcodeContainer.style.display = 'none';
     }
