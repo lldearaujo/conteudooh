@@ -147,10 +147,14 @@ async def toggle_noticia(noticia_id: int, db: Session = Depends(get_db)):
     return noticia.to_dict()
 
 @app.get("/api/noticias/{noticia_id}/qrcode")
-async def gerar_qrcode_noticia(noticia_id: int, db: Session = Depends(get_db)):
-    """Gera um QR code do link da matéria - otimizado para telas de baixa resolução"""
+async def gerar_qrcode_noticia(noticia_id: int, db: Session = Depends(get_db), tamanho: str = "normal"):
+    """Gera um QR code do link da matéria - otimizado para telas de baixa resolução
+    
+    Parâmetros:
+    - tamanho: "pequeno" para telas muito pequenas (128x192, 160x240) ou "normal" para outras
+    """
     try:
-        print(f"[QR Code] Requisição recebida para notícia ID: {noticia_id}")
+        print(f"[QR Code] Requisição recebida para notícia ID: {noticia_id}, tamanho: {tamanho}")
         noticia = db.query(Noticia).filter(Noticia.id == noticia_id).first()
         if not noticia:
             print(f"[QR Code] Notícia {noticia_id} não encontrada")
@@ -173,12 +177,27 @@ async def gerar_qrcode_noticia(noticia_id: int, db: Session = Depends(get_db)):
         
         print(f"[QR Code] Gerando QR code para URL: {url}")
         
+        # Configurações diferentes para telas pequenas vs normais
+        if tamanho == "pequeno":
+            # Para telas muito pequenas: reduzir correção de erro para simplificar o QR code
+            # Isso reduz a quantidade de módulos necessários
+            error_correction = qrcode.constants.ERROR_CORRECT_M  # Correção média (~15%) ao invés de H (~30%)
+            box_size = 10  # Módulos um pouco menores mas ainda legíveis
+            border = 3  # Borda menor para maximizar espaço
+            print(f"[QR Code] Usando configuração para tela pequena: error_correction=M, box_size={box_size}, border={border}")
+        else:
+            # Para telas maiores: máxima correção de erro e módulos maiores
+            error_correction = qrcode.constants.ERROR_CORRECT_H  # Máxima correção de erro (~30%)
+            box_size = 12  # Módulos maiores para facilitar escaneamento à distância
+            border = 4  # Borda maior para melhor detecção
+            print(f"[QR Code] Usando configuração normal: error_correction=H, box_size={box_size}, border={border}")
+        
         # Criar QR code - otimizado para telas de baixa resolução e escaneamento à distância
         qr = qrcode.QRCode(
             version=None,  # Deixa a biblioteca escolher a versão mínima necessária
-            error_correction=qrcode.constants.ERROR_CORRECT_H,  # Máxima correção de erro (~30%)
-            box_size=12,  # Módulos maiores para facilitar escaneamento à distância
-            border=4,  # Borda maior para melhor detecção
+            error_correction=error_correction,
+            box_size=box_size,
+            border=border,
         )
         qr.add_data(url)
         qr.make(fit=True)
@@ -192,7 +211,7 @@ async def gerar_qrcode_noticia(noticia_id: int, db: Session = Depends(get_db)):
         img_bytes.seek(0)
         
         tamanho_bytes = len(img_bytes.getvalue())
-        print(f"[QR Code] QR code gerado com sucesso. Tamanho: {tamanho_bytes} bytes")
+        print(f"[QR Code] QR code gerado com sucesso. Tamanho: {tamanho_bytes} bytes, versão: {qr.version}")
         
         # Adicionar headers para evitar cache e garantir que a imagem seja servida corretamente
         headers = {

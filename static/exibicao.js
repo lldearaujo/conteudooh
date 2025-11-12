@@ -74,10 +74,16 @@ function exibirNoticia(noticia) {
     const qrcodeImage = document.getElementById('qrcode-image-bottom');
     const qrcodeContainer = document.getElementById('qrcode-container-bottom');
     if (noticia.id && noticia.url) {
-        // Garantir que a URL seja absoluta - usar caminho relativo que funciona em qualquer ambiente
-        const qrcodeUrl = `/api/noticias/${noticia.id}/qrcode`;
+        // Detectar se é uma tela muito pequena para usar QR code simplificado
+        const larguraTela = window.innerWidth;
+        const alturaTela = window.innerHeight;
+        const telaMuitoPequena = (larguraTela <= 160 && alturaTela <= 240) || (larguraTela <= 140 && alturaTela <= 200);
         
-        console.log('Tentando carregar QR code:', qrcodeUrl, 'Notícia ID:', noticia.id);
+        // Garantir que a URL seja absoluta - usar caminho relativo que funciona em qualquer ambiente
+        const tamanhoParam = telaMuitoPequena ? 'pequeno' : 'normal';
+        const qrcodeUrl = `/api/noticias/${noticia.id}/qrcode?tamanho=${tamanhoParam}`;
+        
+        console.log('Tentando carregar QR code:', qrcodeUrl, 'Notícia ID:', noticia.id, 'Tela pequena:', telaMuitoPequena);
         
         // Limpar handlers anteriores
         qrcodeImage.onerror = null;
@@ -95,7 +101,7 @@ function exibirNoticia(noticia) {
             // Tentar carregar novamente após 2 segundos
             setTimeout(() => {
                 console.log('Tentando recarregar QR code...');
-                this.src = qrcodeUrl + '?t=' + Date.now();
+                this.src = qrcodeUrl + '&t=' + Date.now();
             }, 2000);
         };
         
@@ -117,7 +123,7 @@ function exibirNoticia(noticia) {
         qrcodeImage.style.visibility = 'visible';
         
         // Adicionar timestamp para evitar cache
-        qrcodeImage.src = qrcodeUrl + '?t=' + Date.now();
+        qrcodeImage.src = qrcodeUrl + '&t=' + Date.now();
     } else {
         console.warn('QR code não pode ser gerado - ID ou URL ausente:', { id: noticia.id, url: noticia.url });
         if (qrcodeImage) qrcodeImage.style.display = 'none';
