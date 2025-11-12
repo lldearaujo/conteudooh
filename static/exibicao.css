@@ -14,6 +14,11 @@ html, body {
     height: 100%;
     overflow: hidden;
     font-family: 'Arial', 'Helvetica', sans-serif;
+    margin: 0;
+    padding: 0;
+    position: fixed;
+    top: 0;
+    left: 0;
 }
 
 body {
@@ -841,6 +846,139 @@ body {
         flex-shrink: 0;
         display: flex !important;
         margin-left: auto;
+    }
+}
+
+/* Media queries específicas para telas Novastar */
+/* LED_Casarão: 240×480 (vertical) */
+@media (width: 240px) and (height: 480px) {
+    .noticia-display {
+        height: 70%;
+    }
+    
+    .footer-fixed-bottom {
+        height: 30%;
+    }
+    
+    .noticia-conteudo-imagem .noticia-titulo {
+        font-size: clamp(14px, 5.8vw + 2.9vh, 28px);
+    }
+    
+    .noticia-conteudo-imagem .noticia-data {
+        font-size: clamp(10px, 4.2vw + 2.1vh, 14px);
+    }
+    
+    .footer-texto {
+        font-size: clamp(8px, 3.3vw + 1.7vh, 14px);
+    }
+    
+    .footer-logo {
+        height: clamp(18px, 7.5vw + 3.8vh, 35px);
+        max-width: clamp(100px, 41.7vw + 20.8vh, 200px);
+    }
+    
+    .qrcode-image {
+        width: clamp(40px, 16.7vw + 8.3vh, 80px);
+        height: clamp(40px, 16.7vw + 8.3vh, 80px);
+    }
+}
+
+/* LED_Rodoviária: 384×192 (horizontal) */
+@media (width: 384px) and (height: 192px) {
+    .noticia-display {
+        height: 70%;
+    }
+    
+    .footer-fixed-bottom {
+        height: 30%;
+    }
+    
+    .noticia-conteudo-imagem .noticia-titulo {
+        font-size: clamp(12px, 3.1vw + 6.3vh, 24px);
+    }
+    
+    .noticia-conteudo-imagem .noticia-data {
+        font-size: clamp(8px, 2.1vw + 4.2vh, 12px);
+    }
+    
+    .footer-texto {
+        font-size: clamp(7px, 1.8vw + 3.6vh, 12px);
+    }
+    
+    .footer-logo {
+        height: clamp(14px, 3.6vw + 7.3vh, 28px);
+        max-width: clamp(80px, 20.8vw + 41.7vh, 160px);
+    }
+    
+    .qrcode-image {
+        width: clamp(30px, 7.8vw + 15.6vh, 60px);
+        height: clamp(30px, 7.8vw + 15.6vh, 60px);
+    }
+}
+
+/* LED_Esquina_Sousa, LED_TenisClube_Crato, LED_Pombal: 288×192 (horizontal) */
+@media (width: 288px) and (height: 192px) {
+    .noticia-display {
+        height: 70%;
+    }
+    
+    .footer-fixed-bottom {
+        height: 30%;
+    }
+    
+    .noticia-conteudo-imagem .noticia-titulo {
+        font-size: clamp(11px, 3.8vw + 5.7vh, 22px);
+    }
+    
+    .noticia-conteudo-imagem .noticia-data {
+        font-size: clamp(7px, 2.4vw + 3.6vh, 11px);
+    }
+    
+    .footer-texto {
+        font-size: clamp(6px, 2.1vw + 3.1vh, 11px);
+    }
+    
+    .footer-logo {
+        height: clamp(13px, 4.5vw + 6.8vh, 26px);
+        max-width: clamp(75px, 26vw + 39vh, 150px);
+    }
+    
+    .qrcode-image {
+        width: clamp(28px, 9.7vw + 14.6vh, 56px);
+        height: clamp(28px, 9.7vw + 14.6vh, 56px);
+    }
+}
+
+/* LED_SJP: 160×240 (vertical) */
+@media (width: 160px) and (height: 240px) {
+    .noticia-display {
+        height: 70%;
+    }
+    
+    .footer-fixed-bottom {
+        height: 30%;
+    }
+    
+    .noticia-conteudo-imagem .noticia-titulo {
+        font-size: clamp(10px, 6.3vw + 4.2vh, 20px);
+    }
+    
+    .noticia-conteudo-imagem .noticia-data {
+        font-size: clamp(7px, 4.4vw + 2.9vh, 12px);
+    }
+    
+    .footer-texto {
+        font-size: clamp(6px, 3.8vw + 2.5vh, 11px);
+    }
+    
+    .footer-logo {
+        height: clamp(12px, 7.5vw + 5vh, 24px);
+        max-width: clamp(70px, 43.8vw + 29.2vh, 140px);
+    }
+    
+    .qrcode-image {
+        width: clamp(25px, 15.6vw + 10.4vh, 50px);
+        height: clamp(25px, 15.6vw + 10.4vh, 50px);
     }
 }
 
