@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ConteudoOH - Exibição</title>
+    <link rel="stylesheet" href="/static/exibicao.css">
+</head>
+<body>
+    <div class="container-fullscreen" id="container">
+        <!-- Header fixo no topo -->
+        <header class="header-fixed">
+            <div class="logo">
+                <img src="/medias/Ativo 3.png" alt="Rádio Centro CZ" class="logo-img">
+                <div class="logo-text">
+                    <h1>Rádio Centro CZ</h1>
+                    <p class="subtitle">Notícias em Tempo Real</p>
+                </div>
+            </div>
+            <div class="clock">
+                <div id="hora"></div>
+                <div id="data"></div>
+            </div>
+        </header>
+
+        <!-- Área principal dividida -->
+        <main class="noticia-fullscreen" id="noticia-container">
+            <div class="loading-screen" id="loading">
+                <div class="spinner"></div>
+                <p>Carregando notícia...</p>
+            </div>
+            
+            <div class="noticia-display hidden" id="noticia-display">
+                <!-- Parte da imagem (lado esquerdo) -->
+                <div class="imagem-section" id="imagem-section">
+                    <div class="background-image" id="background-image"></div>
+                </div>
+                
+                <!-- Parte do texto (lado direito) -->
+                <div class="texto-section">
+                    <div class="overlay-texto"></div>
+                    <div class="noticia-conteudo-container">
+                        <h1 class="noticia-titulo" id="noticia-titulo"></h1>
+                        <p class="noticia-texto" id="noticia-texto"></p>
+                        <div class="noticia-meta">
+                            <span class="noticia-data" id="noticia-data"></span>
+                            <span class="noticia-fonte">radiocentrocz.com.br</span>
+                        </div>
+                        <div class="qrcode-container" id="qrcode-container">
+                            <img id="qrcode-image" alt="QR Code" class="qrcode-image">
+                            <p class="qrcode-label">Escaneie para ler a matéria completa</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer fixo no rodapé -->
+        <footer class="footer-fixed">
+            <span class="footer-texto">Acesse:</span>
+            <img src="/medias/radiocentrocz.com.br.png" alt="radiocentrocz.com.br" class="footer-logo">
+        </footer>
+    </div>
+
+    <script src="/static/exibicao.js"></script>
+</body>
+</html>

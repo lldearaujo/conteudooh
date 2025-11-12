@@ -1,0 +1,24 @@
+# EasyPanel Configuration
+# Este arquivo pode ser usado para configuração automática (se suportado)
+
+name: conteudooh
+type: app
+
+build:
+  type: dockerfile
+  dockerfile: Dockerfile
+
+env:
+  - name: PORT
+    value: "8080"
+  - name: PYTHONUNBUFFERED
+    value: "1"
+
+port: 8080
+
+healthcheck:
+  path: /
+  interval: 30s
+  timeout: 10s
+  retries: 3
+

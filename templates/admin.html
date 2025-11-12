@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ConteudoOH - Painel Administrativo</title>
+    <link rel="stylesheet" href="/static/admin.css">
+</head>
+<body>
+    <div class="admin-container">
+        <header class="admin-header">
+            <h1>Painel Administrativo - ConteudoOH</h1>
+            <div class="header-actions">
+                <button class="btn btn-primary" onclick="atualizarNoticias()">Atualizar Notícias</button>
+                <a href="/" class="btn btn-secondary" target="_blank">Ver Tela de Exibição</a>
+            </div>
+        </header>
+
+        <div class="admin-content">
+            <div class="stats-bar">
+                <div class="stat-card">
+                    <div class="stat-value" id="total-noticias">{{ noticias|length }}</div>
+                    <div class="stat-label">Total de Notícias</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="noticias-ativas">{{ noticias_ativas|length }}</div>
+                    <div class="stat-label">Notícias Ativas</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="noticias-inativas">{{ noticias_inativas|length }}</div>
+                    <div class="stat-label">Notícias Inativas</div>
+                </div>
+            </div>
+
+            <div class="noticias-list">
+                <h2>Gerenciar Notícias</h2>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Título</th>
+                                <th>URL</th>
+                                <th>Data Publicação</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="noticias-tbody">
+                            {% for noticia in noticias %}
+                            <tr data-id="{{ noticia.id }}" class="{% if not noticia.ativa %}inativa{% endif %}">
+                                <td>{{ noticia.id }}</td>
+                                <td class="titulo-cell">
+                                    <strong>{{ noticia.titulo[:60] }}{% if noticia.titulo|length > 60 %}...{% endif %}</strong>
+                                </td>
+                                <td class="url-cell">
+                                    <a href="{{ noticia.url }}" target="_blank" title="{{ noticia.url }}">
+                                        {{ noticia.url[:40] }}{% if noticia.url|length > 40 %}...{% endif %}
+                                    </a>
+                                </td>
+                                <td>{{ noticia.data_publicacao[:10] if noticia.data_publicacao else 'N/A' }}</td>
+                                <td>
+                                    <span class="status-badge {% if noticia.ativa %}ativa{% else %}inativa{% endif %}">
+                                        {% if noticia.ativa %}Ativa{% else %}Inativa{% endif %}
+                                    </span>
+                                </td>
+                                <td class="acoes-cell">
+                                    <button class="btn-icon toggle-btn" onclick="toggleNoticia({{ noticia.id }})" 
+                                            title="{% if noticia.ativa %}Desativar{% else %}Ativar{% endif %}">
+                                        {% if noticia.ativa %}👁️{% else %}🚫{% endif %}
+                                    </button>
+                                    <button class="btn-icon delete-btn" onclick="deletarNoticia({{ noticia.id }})" title="Deletar">
+                                        🗑️
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="loading" class="loading hidden">
+        <div class="spinner"></div>
+        <p>Processando...</p>
+    </div>
+
+    <script src="/static/admin.js"></script>
+</body>
+</html>
+

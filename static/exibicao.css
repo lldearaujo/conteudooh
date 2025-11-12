@@ -1,0 +1,581 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background: #000;
+    color: #fff;
+}
+
+.container-fullscreen {
+    width: 100vw;
+    height: 100vh;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Header fixo - compacto para telas pequenas */
+.header-fixed {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: clamp(5px, 1vh, 15px) clamp(8px, 2vw, 20px);
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    min-height: clamp(50px, 10vh, 100px);
+    gap: clamp(20px, 4vw, 40px);
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(10px, 2vw, 20px);
+}
+
+.logo-img {
+    height: clamp(50px, 10vh, 100px);
+    max-height: 100px;
+    width: auto;
+    max-width: 100%;
+    object-fit: contain;
+    filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.5));
+}
+
+@media (max-width: 768px) {
+    .logo-img {
+        height: clamp(40px, 8vh, 80px);
+        max-height: 80px;
+    }
+}
+
+@media (max-width: 480px) {
+    .logo-img {
+        height: clamp(30px, 6vh, 60px);
+        max-height: 60px;
+    }
+}
+
+.logo-text {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.logo-text h1 {
+    font-size: clamp(1.3em, 4.5vw, 2.2em);
+    margin-bottom: 2px;
+    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.8);
+    color: #fff;
+    line-height: 1.1;
+}
+
+.logo-text .subtitle {
+    font-size: clamp(0.9em, 2.2vw, 1.1em);
+    opacity: 0.9;
+    text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.8);
+    line-height: 1.1;
+}
+
+.clock {
+    text-align: center;
+}
+
+#hora {
+    font-size: clamp(1.4em, 5.5vw, 2.8em);
+    font-weight: bold;
+    font-family: 'Courier New', monospace;
+    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.8);
+    color: #fff;
+    line-height: 1.1;
+}
+
+#data {
+    font-size: clamp(0.9em, 2.2vw, 1.1em);
+    opacity: 0.9;
+    text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.8);
+    line-height: 1.1;
+}
+
+/* Área principal dividida */
+.noticia-fullscreen {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: row;
+    padding-top: clamp(110px, 12vh, 120px);
+    padding-bottom: clamp(60px, 8vh, 80px);
+    overflow: hidden;
+}
+
+.noticia-display {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: row;
+    animation: fadeInContent 1s ease-in-out;
+}
+
+.noticia-display.hidden {
+    display: none;
+}
+
+@keyframes fadeInContent {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* Seção da imagem (lado esquerdo) */
+.imagem-section {
+    width: 50%;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.background-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    z-index: 1;
+    transition: opacity 0.8s ease-in-out;
+    min-width: 100%;
+    min-height: 100%;
+}
+
+/* Garantir que a imagem seja responsiva em diferentes orientações */
+@media (orientation: portrait) {
+    .background-image {
+        background-size: cover;
+        background-position: center center;
+    }
+}
+
+@media (orientation: landscape) {
+    .background-image {
+        background-size: cover;
+        background-position: center center;
+    }
+}
+
+/* Para telas muito pequenas */
+@media (max-width: 480px) {
+    .imagem-section {
+        height: 35%;
+        min-height: 200px;
+    }
+    
+    .background-image {
+        background-size: cover;
+        background-position: center;
+    }
+    
+    .texto-section {
+        height: 65%;
+    }
+    
+    .noticia-fullscreen {
+        padding-top: clamp(90px, 10vh, 100px);
+        padding-bottom: clamp(45px, 6vh, 60px);
+    }
+    
+    .logo {
+        flex-direction: column;
+        gap: clamp(5px, 1vh, 10px);
+    }
+    
+    .logo-img {
+        height: clamp(30px, 6vh, 60px);
+        max-height: 60px;
+    }
+    
+    .footer-logo {
+        height: clamp(20px, 4vh, 35px);
+        max-height: 35px;
+    }
+}
+
+.background-image.fade-in {
+    animation: fadeInBackground 1s ease-in-out;
+}
+
+@keyframes fadeInBackground {
+    from {
+        opacity: 0;
+        transform: scale(1.05);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* Seção do texto (lado direito) */
+.texto-section {
+    width: 50%;
+    height: 100%;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+}
+
+.overlay-texto {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        to right,
+        rgba(0, 0, 0, 0.7) 0%,
+        rgba(0, 0, 0, 0.8) 100%
+    );
+    z-index: 2;
+}
+
+.noticia-conteudo-container {
+    position: relative;
+    z-index: 3;
+    width: 100%;
+    height: 100%;
+    padding: clamp(10px, 2vh, 20px) clamp(15px, 3vw, 25px);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow: hidden;
+}
+
+.noticia-titulo {
+    font-size: clamp(1.3em, 6vw, 3.5em);
+    margin-bottom: clamp(10px, 2vh, 18px);
+    color: #fff;
+    line-height: 1.2;
+    font-weight: bold;
+    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.8);
+    animation: slideUp 0.8s ease-out 0.2s both;
+    flex-shrink: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+}
+
+.noticia-texto {
+    font-size: clamp(1em, 4vw, 2em);
+    line-height: 1.6;
+    color: #f0f0f0;
+    margin-bottom: clamp(10px, 2vh, 18px);
+    text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.8);
+    animation: slideUp 0.8s ease-out 0.4s both;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 8;
+    -webkit-box-orient: vertical;
+}
+
+.noticia-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: clamp(8px, 1.5vh, 12px);
+    border-top: 1px solid rgba(255, 255, 255, 0.3);
+    animation: slideUp 0.8s ease-out 0.6s both;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.noticia-data {
+    font-size: clamp(0.85em, 2.5vw, 1.2em);
+    color: rgba(255, 255, 255, 0.9);
+    font-style: italic;
+    text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.8);
+}
+
+.noticia-fonte {
+    font-size: clamp(0.85em, 2.5vw, 1.2em);
+    color: #fff;
+    font-weight: bold;
+    text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.8);
+}
+
+/* QR Code Container - Otimizado para telas pequenas */
+.qrcode-container {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-top: 4px;
+    padding: 3px;
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    flex-shrink: 0;
+}
+
+.qrcode-image {
+    width: 60px;
+    height: 60px;
+    background: white;
+    padding: 2px;
+    margin-bottom: 1px;
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+}
+
+.qrcode-label {
+    font-size: 7px;
+    color: #fff;
+    text-align: center;
+    margin: 0;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 1);
+    font-weight: 900;
+    line-height: 1;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Loading screen */
+.loading-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    position: relative;
+    z-index: 20;
+    background: rgba(0, 0, 0, 0.8);
+}
+
+.loading-screen.hidden {
+    display: none;
+}
+
+.spinner {
+    border: clamp(4px, 1vw, 6px) solid rgba(255, 255, 255, 0.3);
+    border-top: clamp(4px, 1vw, 6px) solid white;
+    border-radius: 50%;
+    width: clamp(40px, 10vw, 60px);
+    height: clamp(40px, 10vw, 60px);
+    animation: spin 1s linear infinite;
+    margin-bottom: clamp(10px, 2vh, 20px);
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loading-screen p {
+    font-size: clamp(0.8em, 2.5vw, 1.2em);
+    opacity: 0.9;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+    color: #fff;
+}
+
+/* Footer fixo - compacto */
+.footer-fixed {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    text-align: center;
+    padding: clamp(8px, 1.5vh, 15px);
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(10px);
+    font-size: clamp(0.8em, 2vw, 1em);
+    opacity: 0.9;
+    text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.8);
+    min-height: clamp(35px, 7vh, 60px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(15px, 3vw, 25px);
+    flex-wrap: wrap;
+}
+
+.footer-texto {
+    font-size: clamp(1em, 2.5vw, 1.5em);
+    color: #fff;
+    font-weight: normal;
+    text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.8);
+    margin-right: clamp(8px, 1.5vw, 15px);
+}
+
+.footer-logo {
+    height: clamp(35px, 7vh, 60px);
+    max-height: 60px;
+    width: auto;
+    max-width: 100%;
+    object-fit: contain;
+    filter: drop-shadow(1px 1px 2px rgba(0, 0, 0, 0.5));
+}
+
+@media (max-width: 768px) {
+    .footer-logo {
+        height: clamp(25px, 5vh, 45px);
+        max-height: 45px;
+    }
+}
+
+
+.footer-fixed p {
+    margin: 0;
+}
+
+/* Scrollbar personalizada - removida */
+.noticia-conteudo-container::-webkit-scrollbar {
+    display: none;
+}
+
+.noticia-conteudo-container {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+/* Media queries para telas pequenas - layout vertical */
+@media (max-width: 768px) {
+    .noticia-fullscreen {
+        flex-direction: column;
+        padding-top: clamp(100px, 11vh, 110px);
+        padding-bottom: clamp(50px, 7vh, 70px);
+    }
+    
+    .noticia-display {
+        flex-direction: column;
+    }
+    
+    .imagem-section {
+        width: 100%;
+        height: 40%;
+    }
+    
+    .texto-section {
+        width: 100%;
+        height: 60%;
+    }
+    
+    .header-fixed {
+        flex-direction: column;
+        text-align: center;
+        padding: clamp(3px, 0.8vh, 8px) clamp(5px, 1.5vw, 10px);
+    }
+}
+
+/* Garantir que todas as imagens sejam responsivas */
+img {
+    max-width: 100%;
+    height: auto;
+    object-fit: contain;
+}
+
+/* Para telas muito pequenas em modo paisagem */
+@media (max-width: 500px) and (orientation: landscape) {
+    .noticia-fullscreen {
+        flex-direction: row;
+        padding-top: clamp(100px, 11vh, 110px);
+        padding-bottom: clamp(50px, 7vh, 70px);
+    }
+    
+    .noticia-display {
+        flex-direction: row;
+    }
+    
+    .imagem-section {
+        width: 45%;
+        height: 100%;
+    }
+    
+    .texto-section {
+        width: 55%;
+        height: 100%;
+    }
+}
+
+/* Para telas muito baixas */
+@media (max-height: 500px) {
+    .header-fixed {
+        padding: clamp(3px, 0.5vh, 8px) clamp(5px, 1.5vw, 10px);
+        min-height: clamp(30px, 6vh, 50px);
+    }
+    
+    .footer-fixed {
+        padding: clamp(3px, 0.5vh, 6px);
+        min-height: clamp(20px, 4vh, 30px);
+    }
+    
+    .noticia-fullscreen {
+        padding-top: clamp(90px, 10vh, 100px);
+        padding-bottom: clamp(45px, 6vh, 60px);
+    }
+    
+    .qrcode-image {
+        width: 50px;
+        height: 50px;
+    }
+    
+    .qrcode-label {
+        font-size: 6px;
+    }
+}
+
+/* Otimizações específicas para painéis LED pequenos (396x192, 240x480) */
+@media (max-width: 400px) and (max-height: 200px) {
+    .qrcode-image {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .qrcode-label {
+        font-size: 5px;
+    }
+    
+    .qrcode-container {
+        margin-top: 2px;
+        padding: 2px;
+    }
+}
