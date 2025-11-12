@@ -34,7 +34,13 @@ function exibirNoticia(noticia) {
     // Preencher dados da notícia - título na imagem
     const titulo = noticia.titulo || 'Sem título';
     const tituloElement = document.getElementById('noticia-titulo');
+    // Limpar conteúdo anterior e usar textContent para evitar problemas com HTML
+    tituloElement.textContent = '';
     tituloElement.textContent = titulo;
+    // Garantir que não há estilos inline problemáticos que possam causar renderização incorreta
+    tituloElement.style.color = '';
+    tituloElement.style.fontSize = '';
+    tituloElement.style.lineHeight = '';
     
     // Ajustar tamanho da fonte para caber todo o texto na imagem
     ajustarTamanhoFonte(tituloElement);
@@ -52,6 +58,18 @@ function exibirNoticia(noticia) {
         dataElement.textContent = '';
     }
     
+    // Configurar logo da Rádio Centro
+    const footerLogo = document.querySelector('.footer-logo');
+    if (footerLogo) {
+        footerLogo.onerror = function() {
+            console.error('Erro ao carregar logo da Rádio Centro');
+            this.style.display = 'none';
+        };
+        footerLogo.onload = function() {
+            this.style.display = 'block';
+        };
+    }
+    
     // Configurar QR code no footer inferior
     const qrcodeImage = document.getElementById('qrcode-image-bottom');
     const qrcodeContainer = document.getElementById('qrcode-container-bottom');
@@ -59,30 +77,40 @@ function exibirNoticia(noticia) {
         // Garantir que a URL seja absoluta se necessário
         const qrcodeUrl = `/api/noticias/${noticia.id}/qrcode`;
         
+        // Limpar handlers anteriores
+        qrcodeImage.onerror = null;
+        qrcodeImage.onload = null;
+        
         // Configurar handlers de erro e sucesso
         qrcodeImage.onerror = function() {
             console.error('Erro ao carregar QR code:', qrcodeUrl);
-            qrcodeImage.style.display = 'none';
-            qrcodeContainer.style.display = 'none';
+            this.style.display = 'none';
+            if (qrcodeContainer) {
+                qrcodeContainer.style.display = 'none';
+            }
         };
         
         qrcodeImage.onload = function() {
-            qrcodeImage.style.display = 'block';
-            qrcodeContainer.style.display = 'flex';
-            qrcodeContainer.style.visibility = 'visible';
+            this.style.display = 'block';
+            if (qrcodeContainer) {
+                qrcodeContainer.style.display = 'flex';
+                qrcodeContainer.style.visibility = 'visible';
+            }
         };
         
         // Forçar exibição antes de carregar
-        qrcodeContainer.style.display = 'flex';
-        qrcodeContainer.style.visibility = 'visible';
+        if (qrcodeContainer) {
+            qrcodeContainer.style.display = 'flex';
+            qrcodeContainer.style.visibility = 'visible';
+        }
         qrcodeImage.style.display = 'block';
         qrcodeImage.style.visibility = 'visible';
         
         // Definir src após configurar os handlers
         qrcodeImage.src = qrcodeUrl;
     } else {
-        qrcodeImage.style.display = 'none';
-        qrcodeContainer.style.display = 'none';
+        if (qrcodeImage) qrcodeImage.style.display = 'none';
+        if (qrcodeContainer) qrcodeContainer.style.display = 'none';
     }
     
     // Mostrar display com animação
