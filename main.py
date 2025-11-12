@@ -157,6 +157,19 @@ async def gerar_qrcode_noticia(noticia_id: int, db: Session = Depends(get_db)):
         if not noticia.url:
             raise HTTPException(status_code=400, detail="URL da notícia não disponível")
         
+        # Garantir que a URL seja válida e completa
+        url = noticia.url.strip()
+        if not url.startswith(('http://', 'https://')):
+            # Se não começar com http/https, adicionar https://
+            if url.startswith('//'):
+                url = 'https:' + url
+            elif url.startswith('/'):
+                url = 'https://radiocentrocz.com.br' + url
+            else:
+                url = 'https://' + url
+        
+        print(f"Gerando QR code para URL: {url}")
+        
         # Criar QR code - otimizado para telas de baixa resolução e escaneamento à distância
         qr = qrcode.QRCode(
             version=None,  # Deixa a biblioteca escolher a versão mínima necessária
@@ -164,16 +177,18 @@ async def gerar_qrcode_noticia(noticia_id: int, db: Session = Depends(get_db)):
             box_size=12,  # Módulos maiores para facilitar escaneamento à distância
             border=4,  # Borda maior para melhor detecção
         )
-        qr.add_data(noticia.url)
+        qr.add_data(url)
         qr.make(fit=True)
         
         # Criar imagem com alto contraste
         img = qr.make_image(fill_color="black", back_color="white")
         
-        # Converter para bytes
+        # Converter para bytes com qualidade máxima
         img_bytes = io.BytesIO()
-        img.save(img_bytes, format='PNG')
+        img.save(img_bytes, format='PNG', optimize=False)
         img_bytes.seek(0)
+        
+        print(f"QR code gerado com sucesso. Tamanho: {len(img_bytes.getvalue())} bytes")
         
         return Response(content=img_bytes.getvalue(), media_type="image/png")
     except Exception as e:
