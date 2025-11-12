@@ -56,9 +56,30 @@ function exibirNoticia(noticia) {
     const qrcodeImage = document.getElementById('qrcode-image-bottom');
     const qrcodeContainer = document.getElementById('qrcode-container-bottom');
     if (noticia.id && noticia.url) {
-        qrcodeImage.src = `/api/noticias/${noticia.id}/qrcode`;
-        qrcodeImage.style.display = 'block';
+        // Garantir que a URL seja absoluta se necessário
+        const qrcodeUrl = `/api/noticias/${noticia.id}/qrcode`;
+        
+        // Configurar handlers de erro e sucesso
+        qrcodeImage.onerror = function() {
+            console.error('Erro ao carregar QR code:', qrcodeUrl);
+            qrcodeImage.style.display = 'none';
+            qrcodeContainer.style.display = 'none';
+        };
+        
+        qrcodeImage.onload = function() {
+            qrcodeImage.style.display = 'block';
+            qrcodeContainer.style.display = 'flex';
+            qrcodeContainer.style.visibility = 'visible';
+        };
+        
+        // Forçar exibição antes de carregar
         qrcodeContainer.style.display = 'flex';
+        qrcodeContainer.style.visibility = 'visible';
+        qrcodeImage.style.display = 'block';
+        qrcodeImage.style.visibility = 'visible';
+        
+        // Definir src após configurar os handlers
+        qrcodeImage.src = qrcodeUrl;
     } else {
         qrcodeImage.style.display = 'none';
         qrcodeContainer.style.display = 'none';

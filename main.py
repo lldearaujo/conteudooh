@@ -149,29 +149,38 @@ async def toggle_noticia(noticia_id: int, db: Session = Depends(get_db)):
 @app.get("/api/noticias/{noticia_id}/qrcode")
 async def gerar_qrcode_noticia(noticia_id: int, db: Session = Depends(get_db)):
     """Gera um QR code do link da matéria - otimizado para telas de baixa resolução"""
-    noticia = db.query(Noticia).filter(Noticia.id == noticia_id).first()
-    if not noticia:
-        raise HTTPException(status_code=404, detail="Notícia não encontrada")
-    
-    # Criar QR code - otimizado para telas de baixa resolução e escaneamento à distância
-    qr = qrcode.QRCode(
-        version=None,  # Deixa a biblioteca escolher a versão mínima necessária
-        error_correction=qrcode.constants.ERROR_CORRECT_H,  # Máxima correção de erro (~30%)
-        box_size=12,  # Módulos maiores para facilitar escaneamento à distância
-        border=4,  # Borda maior para melhor detecção
-    )
-    qr.add_data(noticia.url)
-    qr.make(fit=True)
-    
-    # Criar imagem com alto contraste
-    img = qr.make_image(fill_color="black", back_color="white")
-    
-    # Converter para bytes
-    img_bytes = io.BytesIO()
-    img.save(img_bytes, format='PNG')
-    img_bytes.seek(0)
-    
-    return Response(content=img_bytes.getvalue(), media_type="image/png")
+    try:
+        noticia = db.query(Noticia).filter(Noticia.id == noticia_id).first()
+        if not noticia:
+            raise HTTPException(status_code=404, detail="Notícia não encontrada")
+        
+        if not noticia.url:
+            raise HTTPException(status_code=400, detail="URL da notícia não disponível")
+        
+        # Criar QR code - otimizado para telas de baixa resolução e escaneamento à distância
+        qr = qrcode.QRCode(
+            version=None,  # Deixa a biblioteca escolher a versão mínima necessária
+            error_correction=qrcode.constants.ERROR_CORRECT_H,  # Máxima correção de erro (~30%)
+            box_size=12,  # Módulos maiores para facilitar escaneamento à distância
+            border=4,  # Borda maior para melhor detecção
+        )
+        qr.add_data(noticia.url)
+        qr.make(fit=True)
+        
+        # Criar imagem com alto contraste
+        img = qr.make_image(fill_color="black", back_color="white")
+        
+        # Converter para bytes
+        img_bytes = io.BytesIO()
+        img.save(img_bytes, format='PNG')
+        img_bytes.seek(0)
+        
+        return Response(content=img_bytes.getvalue(), media_type="image/png")
+    except Exception as e:
+        import traceback
+        print(f"Erro ao gerar QR code: {e}")
+        print(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"Erro ao gerar QR code: {str(e)}")
 
 if __name__ == "__main__":
     import uvicorn
