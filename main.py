@@ -179,18 +179,17 @@ async def gerar_qrcode_noticia(noticia_id: int, db: Session = Depends(get_db), t
         
         # Configurações diferentes para telas pequenas vs normais
         if tamanho == "pequeno":
-            # Para telas muito pequenas: reduzir correção de erro para simplificar o QR code
-            # Isso reduz a quantidade de módulos necessários
-            error_correction = qrcode.constants.ERROR_CORRECT_M  # Correção média (~15%) ao invés de H (~30%)
-            box_size = 10  # Módulos um pouco menores mas ainda legíveis
-            border = 3  # Borda menor para maximizar espaço
-            print(f"[QR Code] Usando configuração para tela pequena: error_correction=M, box_size={box_size}, border={border}")
+            # Para telas muito pequenas: correção de erro baixa para simplificar o QR code
+            error_correction = qrcode.constants.ERROR_CORRECT_L  # Correção baixa (~7%) para menos detalhamento
+            box_size = 8  # Módulos menores
+            border = 2  # Borda mínima
+            print(f"[QR Code] Usando configuração para tela pequena: error_correction=L, box_size={box_size}, border={border}")
         else:
-            # Para telas maiores: máxima correção de erro e módulos maiores
-            error_correction = qrcode.constants.ERROR_CORRECT_H  # Máxima correção de erro (~30%)
-            box_size = 12  # Módulos maiores para facilitar escaneamento à distância
-            border = 4  # Borda maior para melhor detecção
-            print(f"[QR Code] Usando configuração normal: error_correction=H, box_size={box_size}, border={border}")
+            # Para telas maiores: correção de erro média e módulos menores
+            error_correction = qrcode.constants.ERROR_CORRECT_M  # Correção média (~15%) ao invés de H (~30%)
+            box_size = 10  # Módulos menores para menos detalhamento
+            border = 3  # Borda menor
+            print(f"[QR Code] Usando configuração normal: error_correction=M, box_size={box_size}, border={border}")
         
         # Criar QR code - otimizado para telas de baixa resolução e escaneamento à distância
         qr = qrcode.QRCode(
