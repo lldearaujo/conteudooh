@@ -38,9 +38,15 @@ function exibirNoticia(noticia) {
     tituloElement.textContent = '';
     tituloElement.textContent = titulo;
     // Garantir que não há estilos inline problemáticos que possam causar renderização incorreta
-    tituloElement.style.color = '';
+    tituloElement.style.color = '#fff';
+    tituloElement.style.background = 'transparent';
+    tituloElement.style.backgroundColor = 'transparent';
+    tituloElement.style.textShadow = '2px 2px 8px rgba(0, 0, 0, 1)';
+    // Limpar qualquer estilo problemático
     tituloElement.style.fontSize = '';
     tituloElement.style.lineHeight = '';
+    tituloElement.style.outline = 'none';
+    tituloElement.style.border = 'none';
     
     // Ajustar tamanho da fonte para caber todo o texto na imagem
     ajustarTamanhoFonte(tituloElement);
@@ -49,11 +55,18 @@ function exibirNoticia(noticia) {
     const dataElement = document.getElementById('noticia-data');
     if (noticia.data_publicacao) {
         const data = new Date(noticia.data_publicacao);
-        dataElement.textContent = data.toLocaleDateString('pt-BR', {
+        const dataFormatada = data.toLocaleDateString('pt-BR', {
             day: '2-digit',
             month: '2-digit',
             year: 'numeric'
         });
+        // Limpar qualquer conteúdo anterior e garantir renderização correta
+        dataElement.textContent = '';
+        dataElement.textContent = dataFormatada;
+        // Garantir estilos corretos
+        dataElement.style.color = 'rgba(255, 255, 255, 0.9)';
+        dataElement.style.background = 'transparent';
+        dataElement.style.textShadow = '1px 1px 3px rgba(0, 0, 0, 1)';
     } else {
         dataElement.textContent = '';
     }
@@ -75,9 +88,9 @@ function exibirNoticia(noticia) {
     const qrcodeContainer = document.getElementById('qrcode-container-bottom');
     if (noticia.id && noticia.url) {
         // Detectar se é uma tela muito pequena para usar QR code simplificado
-        const larguraTela = window.innerWidth;
-        const alturaTela = window.innerHeight;
-        const telaMuitoPequena = (larguraTela <= 160 && alturaTela <= 240) || (larguraTela <= 140 && alturaTela <= 200);
+        const larguraTela = window.innerWidth || document.documentElement.clientWidth || screen.width;
+        const alturaTela = window.innerHeight || document.documentElement.clientHeight || screen.height;
+        const telaMuitoPequena = (larguraTela <= 180) || (larguraTela <= 160 && alturaTela <= 240) || (larguraTela <= 140 && alturaTela <= 200);
         
         // Garantir que a URL seja absoluta - usar caminho relativo que funciona em qualquer ambiente
         const tamanhoParam = telaMuitoPequena ? 'pequeno' : 'normal';
@@ -217,8 +230,8 @@ function ajustarTamanhoFonte(elemento) {
             let tamanhoFonte = parseFloat(estiloInicial.fontSize) || 16;
             let lineHeight = parseFloat(estiloInicial.lineHeight) || 1.2;
             
-            // Para telas muito pequenas (128x192px), usar limites mais restritivos
-            const telaMuitoPequena = larguraTela <= 140 && alturaTela <= 200;
+            // Para telas muito pequenas (128x192px, 160x240px), usar limites mais restritivos
+            const telaMuitoPequena = larguraTela <= 180 || (larguraTela <= 160 && alturaTela <= 240) || (larguraTela <= 140 && alturaTela <= 200);
             
             // Declarar tamanhoMinimo e tamanhoMaximo no escopo correto
             let tamanhoMinimo;

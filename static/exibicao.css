@@ -7,6 +7,7 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
 }
 
 html, body {
@@ -19,6 +20,8 @@ html, body {
     position: fixed;
     top: 0;
     left: 0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 body {
@@ -29,6 +32,8 @@ body {
 .container-fullscreen {
     width: 100vw;
     height: 100vh;
+    max-width: 100vw;
+    max-height: 100vh;
     position: relative;
     overflow: hidden;
     display: flex;
@@ -41,25 +46,34 @@ body {
    ============================================ */
 .noticia-fullscreen {
     position: relative;
-    z-index: 10;
+    z-index: 1;
     width: 100%;
     height: 100%;
+    max-width: 100%;
+    max-height: 100%;
     display: flex;
     flex-direction: column;
     padding: 0;
     overflow: hidden;
     gap: 0;
+    isolation: isolate;
 }
 
 .noticia-display {
     width: 100%;
     height: 70%;
+    max-width: 100%;
+    max-height: 70%;
     display: flex;
     flex-direction: row;
     animation: fadeInContent 0.6s ease-out;
     flex-shrink: 0;
     margin: 0;
     padding: 0;
+    overflow: hidden;
+    position: relative;
+    z-index: 2;
+    isolation: isolate;
 }
 
 .noticia-display.hidden {
@@ -75,10 +89,13 @@ body {
 .imagem-section {
     width: 100%;
     height: 100%;
+    max-width: 100%;
+    max-height: 100%;
     position: relative;
     overflow: hidden;
     flex-shrink: 0;
     min-height: 0;
+    isolation: isolate;
 }
 
 .background-image {
@@ -128,38 +145,54 @@ body {
     bottom: 0;
     left: 0;
     width: 100%;
-    z-index: 3;
-    padding: clamp(10px, 2vw + 2vh, 30px);
+    max-width: 100%;
+    z-index: 4;
+    padding: clamp(8px, 2vw + 2vh, 30px);
     display: flex;
-        flex-direction: column;
+    flex-direction: column;
     align-items: flex-start;
     justify-content: flex-end;
     gap: clamp(4px, 0.8vh, 10px);
     max-height: 80%;
     min-height: 0;
+    overflow: hidden;
+    box-sizing: border-box;
+    pointer-events: none;
+}
+
+.noticia-conteudo-imagem * {
+    pointer-events: auto;
 }
 
 .noticia-conteudo-imagem .noticia-data-container {
     width: 100%;
+    max-width: 100%;
     flex-shrink: 0;
     margin-bottom: 2px;
     padding-bottom: 0;
+    overflow: hidden;
 }
 
 .noticia-conteudo-imagem .noticia-data {
-    font-size: clamp(12px, 1.5vw + 1.2vh, 18px);
+    font-size: clamp(10px, 1.5vw + 1.2vh, 18px);
     font-weight: 600;
     line-height: 1.1;
-    color: rgba(255, 255, 255, 0.9);
+    color: rgba(255, 255, 255, 0.9) !important;
     text-shadow: 1px 1px 3px rgba(0, 0, 0, 1);
     margin: 0;
     padding: 0;
     display: block;
     flex-shrink: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    background: transparent !important;
+    -webkit-text-fill-color: rgba(255, 255, 255, 0.9);
 }
 
 .noticia-conteudo-imagem .noticia-titulo {
-    font-size: clamp(16px, 4vw + 2.5vh, 42px);
+    font-size: clamp(14px, 4vw + 2.5vh, 42px);
     font-weight: 900;
     line-height: 1.2;
     color: #fff !important;
@@ -167,16 +200,18 @@ body {
     margin: 0;
     padding: 0;
     width: 100%;
+    max-width: 100%;
     overflow: hidden;
     word-wrap: break-word;
     word-break: break-word;
     hyphens: auto;
     display: block;
-    flex: 1;
+    flex: 1 1 auto;
     min-height: 0;
     text-transform: none;
     font-variant: normal;
     text-decoration: none;
+    box-sizing: border-box;
 }
 
 /* Seção do texto */
@@ -225,9 +260,11 @@ body {
 
 .noticia-data-container {
     width: 100%;
+    max-width: 100%;
     flex-shrink: 0;
     margin-bottom: 2px;
     padding-bottom: 0;
+    overflow: hidden;
 }
 
 .noticia-data {
@@ -251,8 +288,10 @@ body {
 .footer-fixed-bottom {
     position: relative;
     width: 100%;
+    max-width: 100%;
     height: 30%;
-    z-index: 100;
+    max-height: 30%;
+    z-index: 5;
     padding-top: clamp(2px, 0.5vh, 6px);
     padding-bottom: clamp(2px, 0.5vh, 6px);
     padding-left: clamp(4px, 1vh, 12px);
@@ -264,6 +303,9 @@ body {
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
+    overflow: hidden;
+    box-sizing: border-box;
+    isolation: isolate;
 }
 
 .footer-content-bottom {
@@ -275,8 +317,11 @@ body {
     width: 100%;
     max-width: 100%;
     height: 100%;
+    max-height: 100%;
     flex-wrap: nowrap;
     position: relative;
+    overflow: hidden;
+    box-sizing: border-box;
 }
 
 .footer-left-group {
@@ -285,6 +330,8 @@ body {
     align-items: center;
     justify-content: center;
     gap: clamp(1px, 0.3vh, 3px);
+    max-width: 100%;
+    overflow: hidden;
 }
 
 /* Footer integrado - estilos */
@@ -299,6 +346,10 @@ body {
     white-space: nowrap;
     letter-spacing: 0.2px;
     order: 1;
+    flex-shrink: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
 }
 
 .qrcode-container {
@@ -311,20 +362,24 @@ body {
     border-radius: 0;
     flex-shrink: 0;
     order: 2;
+    max-width: 100%;
+    overflow: hidden;
 }
 
 .qrcode-image {
     width: clamp(48px, 9.6vw + 2.4vh, 114px);
     height: clamp(48px, 9.6vw + 2.4vh, 114px);
+    max-width: 100%;
+    max-height: 100%;
     background: white;
     padding: clamp(2.4px, 0.48vh, 6px);
     image-rendering: -webkit-optimize-contrast;
     image-rendering: crisp-edges;
     display: block;
-    max-width: 100%;
     border-radius: clamp(4.8px, 0.96vw, 8.4px);
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
     object-fit: contain;
+    flex-shrink: 0;
 }
 
 .qrcode-image[src=""],
@@ -336,6 +391,7 @@ body {
     height: clamp(21.6px, 3.6vw + 1.8vh, 50.4px);
     width: auto;
     max-width: clamp(120px, 24vw + 3.6vh, 288px);
+    max-height: 100%;
     object-fit: contain;
     filter: drop-shadow(1px 1px 2px rgba(0, 0, 0, 0.5));
     flex-shrink: 0;
@@ -347,17 +403,6 @@ body {
 .footer-logo:not([src]),
 .footer-logo[src="#"] {
     display: none !important;
-}
-
-.footer-logo {
-    height: clamp(21.6px, 3.6vw + 1.8vh, 50.4px);
-    width: auto;
-    max-width: clamp(120px, 24vw + 3.6vh, 288px);
-    object-fit: contain;
-    filter: drop-shadow(1px 1px 2px rgba(0, 0, 0, 0.5));
-    flex-shrink: 0;
-    order: 2;
-    display: block;
 }
 
 /* Footer fixo antigo - escondido */
@@ -429,11 +474,14 @@ body {
     .noticia-display {
         flex-direction: column;
         height: 70%;
+        max-height: 70%;
     }
     
     .imagem-section {
         width: 100%;
         height: 100%;
+        max-width: 100%;
+        max-height: 100%;
     }
     
     .texto-section {
@@ -447,21 +495,22 @@ body {
     }
     
     .noticia-conteudo-imagem {
-        padding: clamp(10px, 1.8vw + 1.8vh, 24px);
+        padding: clamp(8px, 1.8vw + 1.8vh, 24px);
         gap: clamp(4px, 0.7vh, 8px);
         max-height: 75%;
     }
     
     .noticia-conteudo-imagem .noticia-data {
-        font-size: clamp(10px, 1.2vw + 1vh, 16px);
+        font-size: clamp(9px, 1.2vw + 1vh, 16px);
     }
     
     .noticia-conteudo-imagem .noticia-titulo {
-        font-size: clamp(14px, 3.5vw + 2vh, 32px);
+        font-size: clamp(12px, 3.5vw + 2vh, 32px);
     }
     
     .footer-fixed-bottom {
         height: 30%;
+        max-height: 30%;
         padding-top: clamp(1.5px, 0.4vh, 5px);
         padding-bottom: clamp(1.5px, 0.4vh, 5px);
         padding-left: clamp(3px, 0.8vh, 10px);
@@ -495,6 +544,7 @@ body {
     
     .noticia-display {
         height: 70%;
+        max-height: 70%;
     }
     
     .noticia-conteudo-container {
@@ -502,21 +552,22 @@ body {
     }
     
     .noticia-conteudo-imagem {
-        padding: clamp(8px, 1.5vw + 1.5vh, 20px);
+        padding: clamp(6px, 1.5vw + 1.5vh, 20px);
         gap: clamp(3px, 0.6vh, 7px);
         max-height: 75%;
     }
     
     .noticia-conteudo-imagem .noticia-data {
-        font-size: clamp(9px, 1.1vw + 0.9vh, 15px);
+        font-size: clamp(8px, 1.1vw + 0.9vh, 15px);
     }
     
     .noticia-conteudo-imagem .noticia-titulo {
-        font-size: clamp(13px, 3vw + 1.8vh, 28px);
+        font-size: clamp(11px, 3vw + 1.8vh, 28px);
     }
     
     .footer-fixed-bottom {
         height: 30%;
+        max-height: 30%;
         padding-top: clamp(1.5px, 0.35vh, 4px);
         padding-bottom: clamp(1.5px, 0.35vh, 4px);
         padding-left: clamp(3px, 0.7vh, 8px);
@@ -548,8 +599,13 @@ body {
         padding: 0;
     }
     
+    .noticia-display {
+        height: 70%;
+        max-height: 70%;
+    }
+    
     .noticia-conteudo-container {
-        padding: 8px;
+        padding: 6px;
     }
     
     .noticia-conteudo-imagem {
@@ -564,10 +620,12 @@ body {
     
     .noticia-conteudo-imagem .noticia-titulo {
         font-size: clamp(9px, 2vw + 1vh, 16px);
+        line-height: 1.1;
     }
     
     .footer-fixed-bottom {
         height: 30%;
+        max-height: 30%;
         padding-top: clamp(1px, 0.3vh, 3px);
         padding-bottom: clamp(1px, 0.3vh, 3px);
         padding-left: clamp(2px, 0.6vh, 6px);
@@ -576,13 +634,13 @@ body {
     
     .footer-content-bottom {
         gap: clamp(1px, 0.3vh, 3px);
-}
+    }
 
-.footer-texto {
+    .footer-texto {
         font-size: clamp(6px, 0.84vw + 0.24vh, 10.8px);
-}
+    }
 
-.footer-logo {
+    .footer-logo {
         height: clamp(14.4px, 1.8vw + 0.72vh, 28.8px);
         max-width: clamp(84px, 16.8vw + 1.2vh, 156px);
     }
@@ -597,14 +655,15 @@ body {
     }
 }
 
-/* Telas muito pequenas (128x192px) */
-@media (max-width: 140px) and (max-height: 200px) {
+/* Telas muito pequenas (128x192px, 160x240px) */
+@media (max-width: 180px) {
     .noticia-fullscreen {
         padding: 0;
     }
     
     .noticia-display {
         height: 70%;
+        max-height: 70%;
     }
     
     .noticia-conteudo-imagem {
@@ -627,6 +686,7 @@ body {
     
     .footer-fixed-bottom {
         height: 30% !important;
+        max-height: 30% !important;
         padding-top: clamp(1px, 0.25vh, 2px) !important;
         padding-bottom: clamp(1px, 0.25vh, 2px) !important;
         padding-left: clamp(1.5px, 0.4vh, 3px) !important;
@@ -635,7 +695,8 @@ body {
     
     .footer-content-bottom {
         gap: clamp(1.3px, 0.26vh, 2.6px) !important;
-        height: 100% !important;
+        height: 100%;
+        max-height: 100%;
     }
     
     .footer-texto {
@@ -669,20 +730,23 @@ body {
     .noticia-display {
         flex-direction: row;
         height: 70%;
+        max-height: 70%;
     }
     
     .imagem-section {
         width: 100%;
         height: 100%;
+        max-width: 100%;
+        max-height: 100%;
     }
     
     .texto-section {
-    display: none;
+        display: none;
         width: 0;
         height: 0;
-}
+    }
 
-.noticia-conteudo-container {
+    .noticia-conteudo-container {
         padding: 8px;
     }
     
@@ -703,6 +767,7 @@ body {
     
     .footer-fixed-bottom {
         height: 30%;
+        max-height: 30%;
         padding-top: clamp(1.5px, 0.35vh, 3.5px);
         padding-bottom: clamp(1.5px, 0.35vh, 3.5px);
         padding-left: clamp(3px, 0.7vh, 7px);
@@ -735,6 +800,7 @@ body {
         justify-content: center;
         gap: clamp(1px, 0.25vh, 2px);
         flex-shrink: 0;
+        max-width: calc(100% - 80px);
     }
     
     .qrcode-container {
@@ -762,13 +828,6 @@ body {
         height: clamp(33.6px, 6vw + 1.2vh, 72px);
         flex-shrink: 0;
     }
-    
-    .qrcode-container {
-        padding: 0;
-        flex-shrink: 0;
-        display: flex !important;
-        margin-left: auto;
-    }
 }
 
 /* Telas horizontais muito pequenas (384x192, 240x480 landscape) */
@@ -780,12 +839,15 @@ body {
     
     .noticia-display {
         height: 70%;
+        max-height: 70%;
         flex-direction: row;
     }
     
     .imagem-section {
         width: 100%;
         height: 100%;
+        max-width: 100%;
+        max-height: 100%;
     }
     
     .texto-section {
@@ -815,6 +877,7 @@ body {
     
     .footer-fixed-bottom {
         height: 30%;
+        max-height: 30%;
         padding-top: clamp(1px, 0.25vh, 2.5px);
         padding-bottom: clamp(1px, 0.25vh, 2.5px);
         padding-left: clamp(2px, 0.5vh, 5px);
@@ -847,6 +910,7 @@ body {
         justify-content: center;
         gap: clamp(1px, 0.25vh, 2px);
         flex-shrink: 0;
+        max-width: calc(100% - 70px);
     }
     
     .footer-texto {
@@ -881,10 +945,12 @@ body {
 @media (width: 240px) and (height: 480px) {
     .noticia-display {
         height: 70%;
+        max-height: 70%;
     }
     
     .footer-fixed-bottom {
         height: 30%;
+        max-height: 30%;
     }
     
     .noticia-conteudo-imagem .noticia-titulo {
@@ -914,10 +980,12 @@ body {
 @media (width: 384px) and (height: 192px) {
     .noticia-display {
         height: 70%;
+        max-height: 70%;
     }
     
     .footer-fixed-bottom {
         height: 30%;
+        max-height: 30%;
     }
     
     .noticia-conteudo-imagem .noticia-titulo {
@@ -947,10 +1015,12 @@ body {
 @media (width: 288px) and (height: 192px) {
     .noticia-display {
         height: 70%;
+        max-height: 70%;
     }
     
     .footer-fixed-bottom {
         height: 30%;
+        max-height: 30%;
     }
     
     .noticia-conteudo-imagem .noticia-titulo {
@@ -980,10 +1050,12 @@ body {
 @media (width: 160px) and (height: 240px) {
     .noticia-display {
         height: 70%;
+        max-height: 70%;
     }
     
     .footer-fixed-bottom {
         height: 30%;
+        max-height: 30%;
     }
     
     .noticia-conteudo-imagem .noticia-titulo {
@@ -1017,6 +1089,7 @@ body {
     
     .noticia-display {
         height: 70%;
+        max-height: 70%;
     }
     
     .noticia-conteudo-container {
@@ -1035,6 +1108,7 @@ body {
     
     .footer-fixed-bottom {
         height: 30%;
+        max-height: 30%;
         padding-top: clamp(2px, 0.5vh, 5px);
         padding-bottom: clamp(2px, 0.5vh, 5px);
         padding-left: clamp(4px, 1vh, 10px);
@@ -1063,16 +1137,138 @@ body {
 /* Garantir que todas as imagens sejam responsivas */
 img {
     max-width: 100%;
+    max-height: 100%;
     height: auto;
     object-fit: contain;
 }
 
 /* Remover scrollbars */
-.noticia-conteudo-container::-webkit-scrollbar {
+.noticia-conteudo-container::-webkit-scrollbar,
+.noticia-conteudo-imagem::-webkit-scrollbar,
+.footer-content-bottom::-webkit-scrollbar {
     display: none;
 }
 
-.noticia-conteudo-container {
+.noticia-conteudo-container,
+.noticia-conteudo-imagem,
+.footer-content-bottom {
     -ms-overflow-style: none;
     scrollbar-width: none;
+}
+
+/* Prevenir overflow em todos os elementos */
+* {
+    max-width: 100%;
+}
+
+/* Garantir que elementos não ultrapassem a tela */
+.noticia-fullscreen,
+.noticia-display,
+.imagem-section,
+.footer-fixed-bottom,
+.footer-content-bottom {
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+/* Prevenir sobreposição de elementos */
+.noticia-conteudo-imagem,
+.noticia-conteudo-imagem .noticia-titulo,
+.noticia-conteudo-imagem .noticia-data {
+    position: relative;
+    z-index: inherit;
+}
+
+/* Garantir que não haja elementos vermelhos ou de debug visíveis */
+* {
+    outline: none !important;
+}
+
+*:focus {
+    outline: none !important;
+}
+
+/* Prevenir renderização incorreta de texto */
+.noticia-titulo,
+.noticia-data {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    color: #fff !important;
+    background: transparent !important;
+    -webkit-text-fill-color: #fff !important;
+    -webkit-background-clip: text;
+    background-clip: text;
+}
+
+/* Garantir que não haja elementos com cores vermelhas de erro */
+.noticia-titulo::before,
+.noticia-titulo::after,
+.noticia-data::before,
+.noticia-data::after {
+    display: none !important;
+    content: none !important;
+}
+
+/* Prevenir elementos de debug ou erro */
+[style*="red"],
+[style*="RED"],
+[class*="error"],
+[class*="debug"],
+[id*="error"],
+[id*="debug"] {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+}
+
+/* Garantir que o footer não sobreponha o conteúdo em telas pequenas */
+@media (max-width: 480px) {
+    .noticia-display {
+        z-index: 2;
+    }
+    
+    .footer-fixed-bottom {
+        z-index: 3;
+        position: relative;
+    }
+    
+    .noticia-conteudo-imagem {
+        z-index: 4;
+        max-height: calc(70vh - 10px);
+    }
+}
+
+/* Para telas muito pequenas */
+@media (max-width: 180px) {
+    .noticia-display {
+        height: 70%;
+        max-height: 70%;
+        z-index: 2;
+    }
+    
+    .footer-fixed-bottom {
+        height: 30%;
+        max-height: 30%;
+        z-index: 3;
+        position: relative;
+    }
+    
+    .noticia-conteudo-imagem {
+        z-index: 4;
+        max-height: calc(70vh - 5px);
+        padding: clamp(3px, 0.6vw + 0.5vh, 6px) !important;
+    }
+    
+    .noticia-conteudo-imagem .noticia-titulo {
+        font-size: clamp(7px, 1.2vw + 0.7vh, 12px) !important;
+        color: #fff !important;
+        background: transparent !important;
+    }
+    
+    .noticia-conteudo-imagem .noticia-data {
+        font-size: clamp(5px, 0.7vw + 0.4vh, 8px) !important;
+        color: rgba(255, 255, 255, 0.9) !important;
+        background: transparent !important;
+    }
 }
