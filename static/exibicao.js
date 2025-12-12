@@ -121,9 +121,30 @@ function exibirNoticia(noticia) {
         qrcodeImage.onload = function() {
             console.log('QR code carregado com sucesso:', qrcodeUrl);
             this.style.display = 'block';
+            // Garantir que o QR code não ultrapasse o tamanho máximo
+            const larguraTela = window.innerWidth || document.documentElement.clientWidth || screen.width;
+            const alturaTela = window.innerHeight || document.documentElement.clientHeight || screen.height;
+            
+            // Limitar tamanho máximo baseado na resolução da tela
+            let maxSize = 70;
+            if (larguraTela <= 256 && alturaTela <= 384) {
+                maxSize = 56; // Para 256x384px
+            } else if (larguraTela <= 480) {
+                maxSize = 65; // Para telas pequenas
+            } else if (larguraTela <= 768) {
+                maxSize = 85; // Para telas médias
+            }
+            
+            this.style.maxWidth = maxSize + 'px';
+            this.style.maxHeight = maxSize + 'px';
+            this.style.width = 'auto';
+            this.style.height = 'auto';
+            
             if (qrcodeContainer) {
                 qrcodeContainer.style.display = 'flex';
                 qrcodeContainer.style.visibility = 'visible';
+                qrcodeContainer.style.flexShrink = '0';
+                qrcodeContainer.style.maxWidth = maxSize + 'px';
             }
         };
         
@@ -131,6 +152,7 @@ function exibirNoticia(noticia) {
         if (qrcodeContainer) {
             qrcodeContainer.style.display = 'flex';
             qrcodeContainer.style.visibility = 'visible';
+            qrcodeContainer.style.flexShrink = '0';
         }
         qrcodeImage.style.display = 'block';
         qrcodeImage.style.visibility = 'visible';

@@ -324,6 +324,30 @@ body {
     box-sizing: border-box;
 }
 
+/* Em telas pequenas, usar layout horizontal para evitar QR code ocupar todo espaço */
+@media (max-width: 768px) {
+    .footer-content-bottom {
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+    }
+    
+    .footer-left-group {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: center;
+        gap: clamp(1px, 0.3vh, 3px);
+        flex-shrink: 0;
+    }
+    
+    .qrcode-container {
+        flex-shrink: 0 !important;
+        display: flex !important;
+        margin-left: auto;
+    }
+}
+
 .footer-left-group {
     display: flex;
     flex-direction: column;
@@ -523,21 +547,45 @@ body {
     }
     
     .footer-content-bottom {
-        gap: clamp(2px, 0.4vh, 4px);
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: clamp(4px, 1vw, 8px) !important;
+    }
+    
+    .footer-left-group {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: center;
+        gap: clamp(1px, 0.3vh, 3px);
+        flex-shrink: 0;
+        max-width: calc(100% - 100px);
     }
     
     .footer-texto {
         font-size: clamp(8.4px, 1.2vw + 0.48vh, 14.4px);
+        white-space: nowrap;
+        text-align: left;
     }
     
     .footer-logo {
         height: clamp(19.2px, 3vw + 1.2vh, 43.2px);
         max-width: clamp(108px, 21.6vw + 2.4vh, 252px);
+        flex-shrink: 0;
+    }
+    
+    .qrcode-container {
+        flex-shrink: 0 !important;
+        display: flex !important;
+        margin-left: auto;
     }
     
     .qrcode-image {
-        width: clamp(42px, 7.2vw + 1.8vh, 96px);
-        height: clamp(42px, 7.2vw + 1.8vh, 96px);
+        width: clamp(38px, 6.5vw + 1.6vh, 85px) !important;
+        height: clamp(38px, 6.5vw + 1.6vh, 85px) !important;
+        max-width: 85px !important;
+        max-height: 85px !important;
     }
 }
 
@@ -580,21 +628,45 @@ body {
     }
     
     .footer-content-bottom {
-        gap: clamp(2px, 0.4vh, 4px);
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: clamp(4px, 1vw, 8px) !important;
+    }
+    
+    .footer-left-group {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: center;
+        gap: clamp(1px, 0.25vh, 2px);
+        flex-shrink: 0;
+        max-width: calc(100% - 70px);
     }
     
     .footer-texto {
         font-size: clamp(7.2px, 1.08vw + 0.36vh, 13.2px);
+        white-space: nowrap;
+        text-align: left;
     }
     
     .footer-logo {
         height: clamp(16.8px, 2.4vw + 0.96vh, 36px);
         max-width: clamp(96px, 19.2vw + 1.8vh, 216px);
+        flex-shrink: 0;
+    }
+    
+    .qrcode-container {
+        flex-shrink: 0 !important;
+        display: flex !important;
+        margin-left: auto;
     }
     
     .qrcode-image {
-        width: clamp(36px, 6vw + 1.2vh, 78px);
-        height: clamp(36px, 6vw + 1.2vh, 78px);
+        width: clamp(32px, 5.5vw + 1.1vh, 65px) !important;
+        height: clamp(32px, 5.5vw + 1.1vh, 65px) !important;
+        max-width: 65px !important;
+        max-height: 65px !important;
     }
 }
 
@@ -1119,21 +1191,48 @@ body {
     }
     
     .footer-content-bottom {
-        gap: clamp(2px, 0.5vh, 4px);
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: clamp(4px, 1.5vw, 8px) !important;
+        padding-left: clamp(2px, 0.8vw, 4px);
+        padding-right: clamp(2px, 0.8vw, 4px);
+    }
+    
+    .footer-left-group {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: center;
+        gap: clamp(1px, 0.3vh, 2px);
+        flex-shrink: 0;
+        max-width: calc(100% - 80px);
     }
     
     .footer-texto {
         font-size: clamp(8px, 3.1vw + 2.1vh, 13px);
+        white-space: nowrap;
+        text-align: left;
     }
     
     .footer-logo {
-        height: clamp(16px, 6.3vw + 4.2vh, 32px);
-        max-width: clamp(90px, 35.2vw + 23.4vh, 180px);
+        height: clamp(14px, 5.5vw + 3.6vh, 28px);
+        max-width: clamp(80px, 31.3vw + 20.8vh, 160px);
+        flex-shrink: 0;
+    }
+    
+    .qrcode-container {
+        flex-shrink: 0 !important;
+        display: flex !important;
+        margin-left: auto;
+        padding: 0;
     }
     
     .qrcode-image {
-        width: clamp(35px, 13.7vw + 9.1vh, 70px);
-        height: clamp(35px, 13.7vw + 9.1vh, 70px);
+        width: clamp(28px, 10.9vw + 7.3vh, 56px) !important;
+        height: clamp(28px, 10.9vw + 7.3vh, 56px) !important;
+        max-width: 56px !important;
+        max-height: 56px !important;
     }
 }
 
