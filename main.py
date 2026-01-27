@@ -8,6 +8,7 @@ from typing import List
 import os
 import qrcode
 import io
+from datetime import datetime, timedelta
 
 from database import engine, get_db, Base
 from models import Noticia
@@ -42,9 +43,31 @@ async def tela_exibicao(request: Request, db: Session = Depends(get_db)):
 
 @app.get("/api/noticias/aleatoria")
 async def obter_noticia_aleatoria(db: Session = Depends(get_db)):
-    """Retorna uma notícia aleatória ativa"""
+    """Retorna uma notícia aleatória ativa dos últimos 3 dias
+    
+    Regra de frescor:
+    - Tenta usar data_publicacao quando existir
+    - Se não houver data_publicacao, usa data_criacao
+    """
     import random
-    noticias = db.query(Noticia).filter(Noticia.ativa == True).all()
+    limite_dias = 3
+    limite_data = datetime.utcnow() - timedelta(days=limite_dias)
+
+    # Notícias com data_publicacao recente
+    noticias = (
+        db.query(Noticia)
+        .filter(
+            Noticia.ativa == True,
+            (
+                # Usa data_publicacao quando existir
+                ((Noticia.data_publicacao != None) & (Noticia.data_publicacao >= limite_data))
+                |
+                # Fallback: quando não há data_publicacao, considera data_criacao
+                ((Noticia.data_publicacao == None) & (Noticia.data_criacao != None) & (Noticia.data_criacao >= limite_data))
+            )
+        )
+        .all()
+    )
     if not noticias:
         raise HTTPException(status_code=404, detail="Nenhuma notícia ativa encontrada")
     noticia = random.choice(noticias)
@@ -69,10 +92,27 @@ async def painel_admin(request: Request, db: Session = Depends(get_db)):
 # API REST
 @app.get("/api/noticias", response_model=List[dict])
 async def listar_noticias(db: Session = Depends(get_db), ativa: bool = None):
-    """Lista todas as notícias"""
+    """Lista notícias, priorizando itens recentes
+    
+    - Por padrão, retorna apenas notícias dos últimos 3 dias
+    - Se quiser todas, use o parâmetro ?ativa=true/false explicitamente
+    """
+    limite_dias = 3
+    limite_data = datetime.utcnow() - timedelta(days=limite_dias)
+
     query = db.query(Noticia)
     if ativa is not None:
         query = query.filter(Noticia.ativa == ativa)
+
+    # Aplicar filtro de últimos 3 dias
+    query = query.filter(
+        (
+            (Noticia.data_publicacao != None) & (Noticia.data_publicacao >= limite_data)
+        ) | (
+            (Noticia.data_publicacao == None) & (Noticia.data_criacao != None) & (Noticia.data_criacao >= limite_data)
+        )
+    )
+
     noticias = query.order_by(desc(Noticia.data_criacao)).all()
     return [n.to_dict() for n in noticias]
 

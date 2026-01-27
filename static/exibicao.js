@@ -48,8 +48,22 @@ function exibirNoticia(noticia) {
     tituloElement.style.outline = 'none';
     tituloElement.style.border = 'none';
     
-    // Ajustar tamanho da fonte para caber todo o texto na imagem
-    ajustarTamanhoFonte(tituloElement);
+    // Ajustar tamanho da fonte apenas em telas pequenas (painéis / resoluções reduzidas)
+    const larguraTelaInicial = window.innerWidth || document.documentElement.clientWidth || screen.width;
+    const alturaTelaInicial = window.innerHeight || document.documentElement.clientHeight || screen.height;
+    const deveAjustarFonte =
+        larguraTelaInicial <= 480 ||
+        alturaTelaInicial <= 400;
+
+    if (deveAjustarFonte) {
+        ajustarTamanhoFonte(tituloElement);
+    } else {
+        // Em telas maiores, confiar apenas no CSS (sem ficar recalculando fonte)
+        tituloElement.style.fontSize = "";
+        tituloElement.style.lineHeight = "";
+        tituloElement.style.maxHeight = "";
+        tituloElement.style.overflow = "";
+    }
     
     // Data
     const dataElement = document.getElementById('noticia-data');
@@ -168,10 +182,12 @@ function exibirNoticia(noticia) {
     // Mostrar display com animação
     display.classList.remove('hidden');
     
-    // Ajustar tamanho da fonte após o layout ser calculado
-    setTimeout(() => {
-        ajustarTamanhoFonte(tituloElement);
-    }, 300);
+    // Em telas pequenas, reajustar a fonte após o layout ser calculado
+    if (deveAjustarFonte) {
+        setTimeout(() => {
+            ajustarTamanhoFonte(tituloElement);
+        }, 300);
+    }
 }
 
 // Inicializar sistema - busca apenas uma vez
@@ -383,8 +399,22 @@ window.addEventListener('resize', () => {
     clearTimeout(resizeTimeout);
     resizeTimeout = setTimeout(() => {
         const tituloElement = document.getElementById('noticia-titulo');
-        if (tituloElement && tituloElement.textContent) {
+        if (!tituloElement || !tituloElement.textContent) return;
+
+        const larguraTela = window.innerWidth || document.documentElement.clientWidth || screen.width;
+        const alturaTela = window.innerHeight || document.documentElement.clientHeight || screen.height;
+        const deveAjustarFonte =
+            larguraTela <= 480 ||
+            alturaTela <= 400;
+
+        if (deveAjustarFonte) {
             ajustarTamanhoFonte(tituloElement);
+        } else {
+            // Em telas grandes, manter apenas o tamanho definido no CSS
+            tituloElement.style.fontSize = '';
+            tituloElement.style.lineHeight = '';
+            tituloElement.style.maxHeight = '';
+            tituloElement.style.overflow = '';
         }
     }, 250);
 });
