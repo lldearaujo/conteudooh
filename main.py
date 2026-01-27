@@ -43,14 +43,14 @@ async def tela_exibicao(request: Request, db: Session = Depends(get_db)):
 
 @app.get("/api/noticias/aleatoria")
 async def obter_noticia_aleatoria(db: Session = Depends(get_db)):
-    """Retorna uma notícia aleatória ativa dos últimos 3 dias
+    """Retorna uma notícia aleatória ativa dos últimos 2 dias
     
     Regra de frescor:
     - Tenta usar data_publicacao quando existir
     - Se não houver data_publicacao, usa data_criacao
     """
     import random
-    limite_dias = 3
+    limite_dias = 2
     limite_data = datetime.utcnow() - timedelta(days=limite_dias)
 
     # Notícias com data_publicacao recente
@@ -94,17 +94,17 @@ async def painel_admin(request: Request, db: Session = Depends(get_db)):
 async def listar_noticias(db: Session = Depends(get_db), ativa: bool = None):
     """Lista notícias, priorizando itens recentes
     
-    - Por padrão, retorna apenas notícias dos últimos 3 dias
+    - Por padrão, retorna apenas notícias dos últimos 2 dias
     - Se quiser todas, use o parâmetro ?ativa=true/false explicitamente
     """
-    limite_dias = 3
+    limite_dias = 2
     limite_data = datetime.utcnow() - timedelta(days=limite_dias)
 
     query = db.query(Noticia)
     if ativa is not None:
         query = query.filter(Noticia.ativa == ativa)
 
-    # Aplicar filtro de últimos 3 dias
+    # Aplicar filtro de últimos 2 dias
     query = query.filter(
         (
             (Noticia.data_publicacao != None) & (Noticia.data_publicacao >= limite_data)
