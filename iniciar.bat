@@ -43,6 +43,7 @@ echo.
 echo O servidor estara disponivel em:
 echo   - http://localhost:8000/
 echo   - http://localhost:8000/admin
+echo   - http://localhost:8000/clima
 echo   - http://localhost:8000/docs
 echo.
 echo Pressione Ctrl+C para parar o servidor.

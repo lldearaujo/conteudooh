@@ -1,0 +1,711 @@
+/* ============================================
+   SISTEMA DE CLIMA - Design Moderno Glassmorphism
+   Totalmente Responsivo para Painéis LED
+   Suporta: 240x480, 288x192, 128x192, 384x192
+   Garantia: Todos os elementos sempre visíveis
+   ============================================ */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    font-family: 'Arial', 'Helvetica', sans-serif;
+    margin: 0;
+    padding: 0;
+    position: fixed;
+    top: 0;
+    left: 0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+    background: linear-gradient(180deg, #87CEEB 0%, #5BA3D0 50%, #4682B4 100%);
+    color: #fff;
+}
+
+.container-fullscreen {
+    width: 100vw;
+    height: 100vh;
+    max-width: 100vw;
+    max-height: 100vh;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ============================================
+   LOADING SCREEN
+   ============================================ */
+.loading-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    z-index: 20;
+    background: linear-gradient(180deg, #87CEEB 0%, #5BA3D0 50%, #4682B4 100%);
+}
+
+.loading-screen.hidden {
+    display: none;
+}
+
+.spinner {
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top: 2px solid white;
+    border-radius: 50%;
+    width: clamp(24px, 5vw, 40px);
+    height: clamp(24px, 5vw, 40px);
+    animation: spin 1s linear infinite;
+    margin-bottom: clamp(6px, 1.2vh, 10px);
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loading-screen p {
+    font-size: clamp(9px, 1.8vw, 12px);
+    font-weight: 500;
+    color: #fff;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* ============================================
+   CONTEÚDO PRINCIPAL - Base Ultra Compacta
+   ============================================ */
+.clima-fullscreen {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    padding: clamp(2px, 0.5vh, 8px) clamp(4px, 1vw, 12px);
+    overflow: hidden;
+    gap: clamp(2px, 0.5vh, 6px);
+    animation: fadeIn 0.6s ease-out;
+    box-sizing: border-box;
+    align-items: center;
+    justify-content: space-evenly;
+}
+
+.clima-fullscreen.hidden {
+    display: none;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Header no topo - Cidade e Data */
+.clima-header-topo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: clamp(1px, 0.3vh, 3px);
+    width: 100%;
+    flex-shrink: 0;
+    min-height: fit-content;
+}
+
+.clima-cidade {
+    font-size: clamp(9px, 2vw, 18px);
+    font-weight: 700;
+    color: #fff;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: clamp(0.3px, 0.15vw, 1px);
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    line-height: 1.1;
+}
+
+.clima-data-topo {
+    font-size: clamp(7px, 1.6vw, 14px);
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.95);
+    text-align: center;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+    line-height: 1.1;
+}
+
+/* Temperatura Principal */
+.temperatura-principal {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    gap: clamp(1px, 0.25vw, 2px);
+    line-height: 1;
+    flex-shrink: 0;
+    width: 100%;
+    min-height: fit-content;
+    margin: 0;
+}
+
+.temperatura-sinal {
+    font-size: clamp(18px, 4.5vw + 2vh, 56px);
+    font-weight: 700;
+    color: #fff;
+    text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.3);
+    margin-top: clamp(1px, 0.3vw, 4px);
+}
+
+.temperatura-valor {
+    font-size: clamp(24px, 6vw + 3vh, 80px);
+    font-weight: 700;
+    color: #fff;
+    text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.3);
+    line-height: 1;
+}
+
+.temperatura-unidade {
+    font-size: clamp(18px, 4.5vw + 2vh, 56px);
+    font-weight: 700;
+    color: #fff;
+    text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.3);
+    margin-top: clamp(1px, 0.3vw, 4px);
+}
+
+/* Ícone de Clima */
+.clima-icone-principal {
+    font-size: clamp(36px, 9vw + 4.5vh, 120px);
+    line-height: 1;
+    filter: drop-shadow(3px 3px 8px rgba(0, 0, 0, 0.2));
+    text-align: center;
+    flex-shrink: 0;
+    width: 100%;
+    min-height: fit-content;
+    margin: 0;
+    animation: float 4s ease-in-out infinite;
+    opacity: 0.95;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px) scale(1); }
+    50% { transform: translateY(-3px) scale(1.01); }
+}
+
+/* Card de Descrição */
+.clima-descricao-card {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    padding: 0;
+    flex-shrink: 0;
+    min-height: fit-content;
+    margin: 0;
+}
+
+.descricao-texto {
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: clamp(8px, 2vw, 16px);
+    padding: clamp(4px, 1.2vw, 12px) clamp(8px, 2.5vw, 24px);
+    font-size: clamp(9px, 2.2vw, 18px);
+    font-weight: 700;
+    color: #fff;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: clamp(0.3px, 0.15vw, 1px);
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    max-width: 94%;
+    line-height: 1.15;
+}
+
+/* Previsão 3 Dias */
+.previsao-3dias {
+    display: flex;
+    gap: clamp(3px, 1vw, 10px);
+    width: 100%;
+    max-width: clamp(180px, 60vw, 380px);
+    padding: 0;
+    justify-content: center;
+    flex-shrink: 0;
+    min-height: fit-content;
+    margin: 0;
+}
+
+.previsao-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: clamp(3px, 0.8vh, 6px);
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: clamp(8px, 2vw, 16px);
+    padding: clamp(4px, 1.2vw, 14px) clamp(3px, 1vw, 10px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    flex: 1;
+    min-width: 0;
+    max-width: 33.33%;
+    min-height: fit-content;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.previsao-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+}
+
+.previsao-temp {
+    font-size: clamp(9px, 2.2vw, 18px);
+    font-weight: 700;
+    color: #fff;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+    line-height: 1.1;
+    text-align: center;
+}
+
+.previsao-icone {
+    font-size: clamp(20px, 5vw, 48px);
+    line-height: 1;
+    filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.2));
+    text-align: center;
+    opacity: 0.95;
+}
+
+.previsao-dia {
+    font-size: clamp(7px, 1.8vw, 12px);
+    font-weight: 700;
+    color: #fff;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    line-height: 1.1;
+}
+
+/* ============================================
+   ERRO SCREEN
+   ============================================ */
+.erro-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    z-index: 30;
+    background: linear-gradient(180deg, #87CEEB 0%, #5BA3D0 50%, #4682B4 100%);
+    padding: clamp(10px, 2.5vw, 20px);
+    text-align: center;
+}
+
+.erro-screen.hidden {
+    display: none;
+}
+
+.erro-icone {
+    font-size: clamp(24px, 6vw, 40px);
+    margin-bottom: clamp(8px, 2vh, 12px);
+}
+
+.erro-mensagem {
+    font-size: clamp(10px, 2.2vw, 14px);
+    color: #fff;
+    margin-bottom: clamp(10px, 2.5vh, 16px);
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.btn-retry {
+    padding: clamp(6px, 1.5vw, 10px) clamp(12px, 3vw, 20px);
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: clamp(8px, 2vw, 12px);
+    color: #fff;
+    font-size: clamp(9px, 2.2vw, 12px);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.btn-retry:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+}
+
+.btn-retry:active {
+    transform: translateY(0);
+}
+
+/* ============================================
+   MEDIA QUERIES - Resoluções Específicas
+   ============================================ */
+
+/* 384x192 (Landscape - 2:1) - Prioridade Alta */
+@media (min-width: 380px) and (max-width: 390px) and (min-height: 190px) and (max-height: 195px) {
+    .clima-fullscreen {
+        padding: clamp(3px, 0.8vh, 5px) clamp(4px, 1vw, 7px);
+        gap: clamp(2px, 0.5vh, 4px);
+    }
+
+    .clima-cidade {
+        font-size: clamp(11px, 2.8vw, 14px);
+    }
+
+    .clima-data-topo {
+        font-size: clamp(8px, 2vw, 11px);
+    }
+
+    .temperatura-sinal {
+        font-size: clamp(22px, 5.5vw + 1.5vh, 36px);
+    }
+
+    .temperatura-valor {
+        font-size: clamp(30px, 7.5vw + 2.5vh, 52px);
+    }
+
+    .temperatura-unidade {
+        font-size: clamp(22px, 5.5vw + 1.5vh, 36px);
+    }
+
+    .clima-icone-principal {
+        font-size: clamp(38px, 9.5vw + 3.5vh, 64px);
+    }
+
+    .descricao-texto {
+        font-size: clamp(10px, 2.5vw, 14px);
+        padding: clamp(4px, 1vw, 8px) clamp(8px, 2vw, 16px);
+    }
+
+    .previsao-3dias {
+        gap: clamp(4px, 1vw, 8px);
+    }
+
+    .previsao-card {
+        padding: clamp(4px, 1vw, 10px) clamp(3px, 0.8vw, 6px);
+        gap: clamp(2px, 0.5vh, 4px);
+    }
+
+    .previsao-temp {
+        font-size: clamp(10px, 2.5vw, 14px);
+    }
+
+    .previsao-icone {
+        font-size: clamp(18px, 4.5vw, 28px);
+    }
+
+    .previsao-dia {
+        font-size: clamp(7px, 1.8vw, 10px);
+    }
+}
+
+/* 288x192 (Landscape - 3:2) */
+@media (min-width: 285px) and (max-width: 295px) and (min-height: 190px) and (max-height: 195px) {
+    .clima-fullscreen {
+        padding: clamp(2px, 0.6vh, 4px) clamp(3px, 0.8vw, 5px);
+        gap: clamp(2px, 0.4vh, 3px);
+    }
+
+    .clima-cidade {
+        font-size: clamp(9px, 2.2vw, 12px);
+    }
+
+    .clima-data-topo {
+        font-size: clamp(7px, 1.8vw, 10px);
+    }
+
+    .temperatura-sinal {
+        font-size: clamp(16px, 4vw + 1vh, 28px);
+    }
+
+    .temperatura-valor {
+        font-size: clamp(22px, 5.5vw + 2vh, 40px);
+    }
+
+    .temperatura-unidade {
+        font-size: clamp(16px, 4vw + 1vh, 28px);
+    }
+
+    .clima-icone-principal {
+        font-size: clamp(28px, 7vw + 2.5vh, 48px);
+    }
+
+    .descricao-texto {
+        font-size: clamp(8px, 2vw, 12px);
+        padding: clamp(3px, 0.8vw, 6px) clamp(6px, 1.5vw, 12px);
+    }
+
+    .previsao-3dias {
+        gap: clamp(3px, 0.8vw, 6px);
+    }
+
+    .previsao-card {
+        padding: clamp(3px, 0.8vw, 8px) clamp(2px, 0.6vw, 5px);
+        gap: clamp(2px, 0.4vh, 3px);
+    }
+
+    .previsao-temp {
+        font-size: clamp(8px, 2vw, 12px);
+    }
+
+    .previsao-icone {
+        font-size: clamp(16px, 4vw, 24px);
+    }
+
+    .previsao-dia {
+        font-size: clamp(6px, 1.5vw, 9px);
+    }
+}
+
+/* 240x480 (Portrait - 1:2) */
+@media (min-width: 238px) and (max-width: 245px) and (min-height: 478px) {
+    .clima-fullscreen {
+        padding: clamp(2px, 0.4vh, 4px) clamp(4px, 1vw, 6px);
+        gap: clamp(2px, 0.4vh, 4px);
+    }
+
+    .clima-header-topo {
+        gap: clamp(1px, 0.2vh, 2px);
+    }
+
+    .clima-cidade {
+        font-size: clamp(12px, 3vw, 18px);
+    }
+
+    .clima-data-topo {
+        font-size: clamp(10px, 2.5vw, 15px);
+    }
+
+    .temperatura-principal {
+        margin: 0;
+    }
+
+    .temperatura-sinal {
+        font-size: clamp(24px, 6vw + 2vh, 40px);
+    }
+
+    .temperatura-valor {
+        font-size: clamp(36px, 9vw + 3.5vh, 64px);
+    }
+
+    .temperatura-unidade {
+        font-size: clamp(24px, 6vw + 2vh, 40px);
+    }
+
+    .clima-icone-principal {
+        font-size: clamp(56px, 14vw + 6vh, 100px);
+        margin: 0;
+    }
+
+    .clima-descricao-card {
+        margin: 0;
+    }
+
+    .descricao-texto {
+        font-size: clamp(12px, 3vw, 18px);
+        padding: clamp(6px, 1.5vw, 12px) clamp(12px, 3vw, 24px);
+        margin: 0;
+    }
+
+    .previsao-3dias {
+        gap: clamp(3px, 0.8vw, 6px);
+        margin: 0;
+    }
+
+    .previsao-card {
+        padding: clamp(6px, 1.5vw, 12px) clamp(4px, 1vw, 8px);
+        gap: clamp(3px, 0.6vh, 5px);
+    }
+
+    .previsao-temp {
+        font-size: clamp(12px, 3vw, 18px);
+    }
+
+    .previsao-icone {
+        font-size: clamp(28px, 7vw, 44px);
+    }
+
+    .previsao-dia {
+        font-size: clamp(9px, 2.2vw, 14px);
+    }
+}
+
+/* 128x192 (Portrait muito pequeno - 2:3) */
+@media (min-width: 126px) and (max-width: 132px) and (min-height: 190px) {
+    .clima-fullscreen {
+        padding: clamp(1px, 0.4vh, 3px) clamp(2px, 0.6vw, 4px);
+        gap: clamp(1px, 0.3vh, 2px);
+    }
+
+    .clima-cidade {
+        font-size: clamp(7px, 1.8vw, 9px);
+    }
+
+    .clima-data-topo {
+        font-size: clamp(5px, 1.3vw, 7px);
+    }
+
+    .temperatura-sinal {
+        font-size: clamp(12px, 3vw + 1vh, 20px);
+    }
+
+    .temperatura-valor {
+        font-size: clamp(16px, 4vw + 1.5vh, 28px);
+    }
+
+    .temperatura-unidade {
+        font-size: clamp(12px, 3vw + 1vh, 20px);
+    }
+
+    .clima-icone-principal {
+        font-size: clamp(24px, 6vw + 2.5vh, 40px);
+    }
+
+    .descricao-texto {
+        font-size: clamp(6px, 1.5vw, 9px);
+        padding: clamp(2px, 0.6vw, 4px) clamp(4px, 1vw, 8px);
+    }
+
+    .previsao-3dias {
+        gap: clamp(2px, 0.6vw, 4px);
+    }
+
+    .previsao-card {
+        padding: clamp(2px, 0.6vw, 5px) clamp(1px, 0.4vw, 3px);
+        gap: clamp(1px, 0.3vh, 2px);
+    }
+
+    .previsao-temp {
+        font-size: clamp(6px, 1.5vw, 9px);
+    }
+
+    .previsao-icone {
+        font-size: clamp(12px, 3vw, 18px);
+    }
+
+    .previsao-dia {
+        font-size: clamp(5px, 1.3vw, 7px);
+    }
+}
+
+/* Telas pequenas genéricas (até 480px) */
+@media (max-width: 480px) {
+    .clima-fullscreen {
+        padding: clamp(3px, 0.8vh, 8px) clamp(4px, 1vw, 10px);
+        gap: clamp(3px, 0.6vh, 6px);
+    }
+
+    .previsao-3dias {
+        max-width: 100%;
+        gap: clamp(3px, 1vw, 8px);
+    }
+
+    .previsao-card {
+        padding: clamp(4px, 1.2vw, 12px) clamp(3px, 1vw, 8px);
+        gap: clamp(3px, 0.8vh, 6px);
+    }
+}
+
+/* Telas muito pequenas genéricas (até 400px) */
+@media (max-width: 400px) {
+    .clima-fullscreen {
+        padding: clamp(2px, 0.6vh, 5px) clamp(3px, 0.8vw, 6px);
+        gap: clamp(2px, 0.5vh, 4px);
+    }
+}
+
+/* Telas extremamente pequenas (até 200px) */
+@media (max-width: 200px) {
+    .clima-fullscreen {
+        padding: clamp(1px, 0.4vh, 3px) clamp(2px, 0.6vw, 4px);
+        gap: clamp(1px, 0.3vh, 2px);
+    }
+}
+
+/* Orientação Landscape - Ajustes específicos */
+@media (orientation: landscape) and (max-height: 250px) {
+    .clima-fullscreen {
+        gap: clamp(1px, 0.3vh, 3px);
+        padding: clamp(2px, 0.5vh, 4px) clamp(3px, 0.8vw, 6px);
+    }
+
+    .temperatura-principal {
+        margin: 0;
+    }
+
+    .clima-icone-principal {
+        margin: 0;
+    }
+
+    .descricao-texto {
+        margin: 0;
+        padding: clamp(3px, 0.8vw, 8px) clamp(6px, 1.5vw, 16px);
+    }
+
+    .previsao-3dias {
+        margin: 0;
+    }
+}
+
+/* Orientação Portrait - Ajustes específicos */
+@media (orientation: portrait) and (max-width: 300px) {
+    .clima-fullscreen {
+        gap: clamp(3px, 0.6vh, 5px);
+    }
+}
+
+/* Remover scrollbars */
+.clima-fullscreen::-webkit-scrollbar {
+    display: none;
+}
+
+.clima-fullscreen {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+/* Garantir que tudo caiba na tela */
+.clima-fullscreen {
+    min-height: 0;
+    overflow: hidden;
+}
+
+.clima-header-topo,
+.temperatura-principal,
+.clima-icone-principal,
+.clima-descricao-card,
+.previsao-3dias {
+    min-height: 0;
+    flex-shrink: 0;
+}
+
+/* Ajuste fino para garantir visibilidade total */
+@media (max-width: 500px) {
+    .clima-fullscreen {
+        justify-content: space-evenly;
+    }
+}
+
+/* Forçar todos os elementos a serem visíveis */
+.clima-fullscreen > * {
+    visibility: visible !important;
+    display: flex !important;
+}
+
+.clima-fullscreen.hidden {
+    display: none !important;
+}

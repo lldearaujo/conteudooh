@@ -8,12 +8,18 @@ from typing import List
 import os
 import qrcode
 import io
+import logging
 from datetime import datetime, timedelta
+
+# Configurar logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 from database import engine, get_db, Base
 from models import Noticia
 from scraper import RadiocentroScraper
 from scheduler import iniciar_scheduler
+from weather_service import criar_servico_clima
 
 # Criar tabelas
 Base.metadata.create_all(bind=engine)
@@ -269,9 +275,39 @@ async def gerar_qrcode_noticia(noticia_id: int, db: Session = Depends(get_db), t
         print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=error_msg)
 
+@app.get("/clima", response_class=HTMLResponse)
+async def tela_clima(request: Request):
+    """Tela cheia para exibição de condições meteorológicas"""
+    template = templates.get_template("clima.html")
+    content = template.render()
+    return HTMLResponse(content=content)
+
+@app.get("/api/clima")
+async def obter_dados_clima():
+    """Retorna dados meteorológicos atuais e previsão"""
+    try:
+        servico = criar_servico_clima()
+        dados = servico.obter_clima_atual()
+        
+        if dados is None:
+            raise HTTPException(status_code=503, detail="Serviço meteorológico temporariamente indisponível")
+        
+        return dados
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Erro ao obter dados climáticos: {e}")
+        raise HTTPException(status_code=500, detail="Erro ao buscar dados meteorológicos")
+
 if __name__ == "__main__":
     import uvicorn
     import os
+    import logging
+    
+    # Configurar logging
+    logging.basicConfig(level=logging.INFO)
+    logger = logging.getLogger(__name__)
+    
     port = int(os.environ.get("PORT", 8000))
     uvicorn.run(app, host="0.0.0.0", port=port)
 
