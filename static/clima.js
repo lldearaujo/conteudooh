@@ -6,7 +6,24 @@
 // Buscar dados meteorológicos da API
 async function buscarDadosClima() {
     try {
-        const response = await fetch('/api/clima');
+        // Ler os parâmetros da URL da página (ex: /clima?cidade=Sousa&estado=PB)
+        const urlParams = new URLSearchParams(window.location.search);
+        const cidade = urlParams.get('cidade');
+        const estado = urlParams.get('estado') || urlParams.get('uf');
+
+        let url = '/api/clima';
+        const query = [];
+        if (cidade) {
+            query.push(`cidade=${encodeURIComponent(cidade)}`);
+        }
+        if (estado) {
+            query.push(`estado=${encodeURIComponent(estado)}`);
+        }
+        if (query.length > 0) {
+            url += `?${query.join('&')}`;
+        }
+
+        const response = await fetch(url);
         if (!response.ok) {
             throw new Error(`Erro HTTP: ${response.status}`);
         }
@@ -59,6 +76,30 @@ function exibirClima(dados) {
     // Preencher dados atuais
     const atual = dados.atual;
     
+    // Atualizar nome da cidade (se disponível)
+    const cidadeElement = document.querySelector('.clima-cidade');
+    if (cidadeElement) {
+        const urlParams = new URLSearchParams(window.location.search);
+        const cidadeParam = urlParams.get('cidade');
+        const estadoParam = urlParams.get('estado') || urlParams.get('uf');
+
+        let nomeCidade = dados?.localizacao?.nome || '';
+
+        // Se o backend não retornou nome, monta a partir dos parâmetros
+        if (!nomeCidade && cidadeParam) {
+            nomeCidade = cidadeParam;
+            if (estadoParam) {
+                nomeCidade = `${cidadeParam} - ${estadoParam}`;
+            }
+        }
+
+        if (!nomeCidade) {
+            nomeCidade = 'Cidade não informada';
+        }
+
+        cidadeElement.textContent = nomeCidade;
+    }
+
     // Data no topo
     const dataElement = document.getElementById('clima-data-topo');
     dataElement.textContent = formatarDataCompleta();

@@ -19,7 +19,7 @@ from database import engine, get_db, Base
 from models import Noticia
 from scraper import RadiocentroScraper
 from scheduler import iniciar_scheduler
-from weather_service import criar_servico_clima
+from weather_service import criar_servico_clima, WeatherService
 
 # Criar tabelas
 Base.metadata.create_all(bind=engine)
@@ -283,14 +283,37 @@ async def tela_clima(request: Request):
     return HTMLResponse(content=content)
 
 @app.get("/api/clima")
-async def obter_dados_clima():
-    """Retorna dados meteorológicos atuais e previsão"""
+async def obter_dados_clima(cidade: str = None, estado: str = None):
+    """Retorna dados meteorológicos atuais e previsão.
+    
+    - Se nenhum parâmetro for passado, usa as coordenadas padrão (Cajazeiras - PB)
+    - Se ?cidade=NomeDaCidade for informado, tenta buscar as coordenadas via geocoding
+    """
     try:
-        servico = criar_servico_clima()
+        latitude = None
+        longitude = None
+        nome_exibicao = "Cajazeiras - PB"
+
+        if cidade:
+            # Usa geocoding por cidade + estado (quando disponível)
+            coords = WeatherService.buscar_coordenadas(cidade=cidade, estado=estado)
+            if coords:
+                latitude = coords["latitude"]
+                longitude = coords["longitude"]
+                nome_exibicao = coords.get("nome_formatado") or nome_exibicao
+            else:
+                logger.warning(f"Não foi possível obter coordenadas para a cidade: {cidade}. Usando padrão.")
+
+        servico = criar_servico_clima(latitude=latitude, longitude=longitude)
         dados = servico.obter_clima_atual()
         
         if dados is None:
             raise HTTPException(status_code=503, detail="Serviço meteorológico temporariamente indisponível")
+
+        # Garante que o nome exibido corresponda ao que foi resolvido pelo backend
+        if "localizacao" not in dados:
+            dados["localizacao"] = {}
+        dados["localizacao"]["nome"] = nome_exibicao
         
         return dados
     except HTTPException:

@@ -12,6 +12,9 @@ logger = logging.getLogger(__name__)
 # URL base da API Open-Meteo (gratuita, sem necessidade de API key)
 API_BASE_URL = "https://api.open-meteo.com/v1/forecast"
 
+# URL base da API de Geocoding (Nominatim / OpenStreetMap)
+GEO_API_URL = "https://nominatim.openstreetmap.org/search"
+
 # Coordenadas padrão (Cajazeiras, PB - pode ser configurável)
 DEFAULT_LATITUDE = -6.8889
 DEFAULT_LONGITUDE = -38.5558
@@ -69,7 +72,7 @@ class WeatherService:
             logger.error(f"Erro inesperado ao processar dados meteorológicos: {e}")
             return None
     
-    def _processar_dados(self, data: Dict) -> Dict:
+    def _processar_dados(self, data: Dict, nome_cidade: str = "Cajazeiras - PB") -> Dict:
         """
         Processa os dados brutos da API em um formato mais útil
         
@@ -142,10 +145,79 @@ class WeatherService:
             "previsao_horaria": previsao_horaria,
             "previsao_diaria": previsao_diaria,
             "localizacao": {
+                "nome": nome_cidade,
                 "latitude": self.latitude,
                 "longitude": self.longitude
             }
         }
+
+    @staticmethod
+    def buscar_coordenadas(cidade: str, estado: Optional[str] = None, pais: str = "Brasil") -> Optional[Dict]:
+        """
+        Busca latitude e longitude pelo nome da cidade usando a API de Geocoding do Open-Meteo
+        
+        Args:
+            cidade: Nome da cidade (ex: "Campina Grande", "São Paulo")
+            estado: UF ou nome do estado (ex: "PB", "Paraíba")
+            pais: Nome do país (padrão: Brasil)
+            
+        Returns:
+            Dict com latitude, longitude e nome formatado, ou None em caso de erro
+        """
+        try:
+            if not cidade:
+                return None
+
+            # Monta parâmetros para Nominatim
+            params = {
+                "city": cidade,
+                "format": "json",
+                "limit": 1,
+            }
+
+            # Adiciona filtros de estado e país quando informados
+            if estado:
+                params["state"] = estado
+            if pais:
+                params["country"] = pais
+
+            headers = {
+                "User-Agent": "ConteudoOH/1.0 (clima@conteudooh.local)"
+            }
+
+            response = requests.get(GEO_API_URL, params=params, headers=headers, timeout=10)
+            response.raise_for_status()
+
+            results = response.json()
+            if not results:
+                logger.warning(f"Nenhum resultado de geocoding para cidade: {cidade}, estado: {estado}")
+                return None
+
+            resultado = results[0]
+
+            # Nominatim retorna lat/lon como string
+            lat = float(resultado["lat"])
+            lon = float(resultado["lon"])
+
+            nome_cidade = resultado.get("display_name", cidade)
+
+            # Monta nome curto "Cidade - UF" quando possível
+            nome_formatado = cidade
+            if estado:
+                nome_formatado = f"{cidade} - {estado}"
+
+            return {
+                "latitude": lat,
+                "longitude": lon,
+                "nome_formatado": nome_formatado,
+                "nome_completo": nome_cidade,
+            }
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Erro na requisição de geocoding: {e}")
+            return None
+        except Exception as e:
+            logger.error(f"Erro inesperado ao processar geocoding: {e}")
+            return None
     
     def _traduzir_codigo_clima(self, codigo: Optional[int]) -> str:
         """
