@@ -5,6 +5,15 @@
 
 // Função para obter emoji compatível com qualquer display
 function obterEmojiClima(codigoClima) {
+    // Tratar valores null, undefined ou inválidos
+    if (codigoClima === null || codigoClima === undefined || isNaN(codigoClima)) {
+        console.warn('Código de clima inválido:', codigoClima);
+        return '🌤️'; // Fallback padrão
+    }
+    
+    // Converter para número inteiro
+    const codigo = parseInt(codigoClima, 10);
+    
     // Mapeamento de códigos WMO para emojis universais
     const emojis = {
         0: '☀️',   // Céu limpo
@@ -37,7 +46,13 @@ function obterEmojiClima(codigoClima) {
         99: '⛈️'   // Trovoada com granizo forte
     };
     
-    return emojis[codigoClima] || '🌤️';
+    const emoji = emojis[codigo];
+    if (!emoji) {
+        console.warn('Código de clima não mapeado:', codigo);
+        return '🌤️'; // Fallback padrão
+    }
+    
+    return emoji;
 }
 
 // Buscar dados meteorológicos da API
@@ -129,7 +144,26 @@ function exibirClima(dados) {
     // Ícone (usar emoji compatível)
     const iconeEl = document.getElementById('icone-clima');
     if (iconeEl) {
-        iconeEl.textContent = obterEmojiClima(atual.codigo_clima);
+        // Tentar obter código do clima
+        let codigo = atual.codigo_clima;
+        
+        // Se não houver código, usar fallback
+        if (codigo === null || codigo === undefined || isNaN(codigo)) {
+            codigo = 2; // Fallback para parcialmente nublado
+        }
+        
+        const emoji = obterEmojiClima(codigo);
+        iconeEl.textContent = emoji;
+        
+        // Garantir que o ícone seja sempre visível
+        if (!emoji || emoji.trim() === '') {
+            iconeEl.textContent = '🌤️';
+        }
+        
+        // Forçar renderização e visibilidade
+        iconeEl.style.display = 'flex';
+        iconeEl.style.visibility = 'visible';
+        iconeEl.style.opacity = '0.95';
     }
     
     // Descrição
@@ -166,17 +200,38 @@ function preencherPrevisao3Dias(previsoes) {
                 diaElement.textContent = formatarDiaSemana(previsao.dia_semana || '--');
             }
             if (iconeElement) {
-                iconeElement.textContent = obterEmojiClima(previsao.codigo_clima);
+                // Tentar obter código do clima de várias fontes
+                let codigo = previsao.codigo_clima;
+                if (codigo === null || codigo === undefined) {
+                    // Tentar usar o ícone existente se disponível
+                    codigo = previsao.icone ? null : 2; // Fallback para parcialmente nublado
+                }
+                
+                const emoji = obterEmojiClima(codigo);
+                iconeElement.textContent = emoji;
+                
+                // Garantir que o ícone seja sempre visível
+                if (!emoji || emoji.trim() === '' || emoji === '🌤️' && codigo === null) {
+                    iconeElement.textContent = '🌤️'; // Fallback garantido
+                }
+                
+                // Forçar renderização
+                iconeElement.style.display = 'block';
+                iconeElement.style.visibility = 'visible';
             }
         } else {
-            // Se não houver dados suficientes, mostrar "--"
+            // Se não houver dados suficientes, mostrar valores padrão
             const tempElement = card.querySelector('.previsao-temp');
             const diaElement = card.querySelector('.previsao-dia');
             const iconeElement = card.querySelector('.previsao-icone');
             
             if (tempElement) tempElement.textContent = '+--°C';
             if (diaElement) diaElement.textContent = '---';
-            if (iconeElement) iconeElement.textContent = obterEmojiClima(2); // Código padrão: parcialmente nublado
+            if (iconeElement) {
+                iconeElement.textContent = obterEmojiClima(2); // Código padrão: parcialmente nublado
+                iconeElement.style.display = 'block';
+                iconeElement.style.visibility = 'visible';
+            }
         }
     }
 }
