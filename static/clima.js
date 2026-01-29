@@ -3,6 +3,43 @@
  * Gerencia a exibição de dados meteorológicos
  */
 
+// Função para obter emoji compatível com qualquer display
+function obterEmojiClima(codigoClima) {
+    // Mapeamento de códigos WMO para emojis universais
+    const emojis = {
+        0: '☀️',   // Céu limpo
+        1: '🌤️',   // Principalmente limpo
+        2: '🌤️',   // Parcialmente nublado
+        3: '☁️',   // Nublado
+        45: '🌫️',  // Nevoeiro
+        48: '🌫️',  // Nevoeiro com geada
+        51: '🌦️',  // Garoa leve
+        53: '🌦️',  // Garoa moderada
+        55: '🌦️',  // Garoa densa
+        56: '🌦️',  // Garoa congelante leve
+        57: '🌦️',  // Garoa congelante densa
+        61: '🌧️',  // Chuva leve
+        63: '🌧️',  // Chuva moderada
+        65: '🌧️',  // Chuva forte
+        66: '🌧️',  // Chuva congelante leve
+        67: '🌧️',  // Chuva congelante forte
+        71: '❄️',  // Queda de neve leve
+        73: '❄️',  // Queda de neve moderada
+        75: '❄️',  // Queda de neve forte
+        77: '❄️',  // Grãos de neve
+        80: '⛈️',  // Pancadas de chuva leve
+        81: '⛈️',  // Pancadas de chuva moderada
+        82: '⛈️',  // Pancadas de chuva forte
+        85: '🌨️',  // Pancadas de neve leve
+        86: '🌨️',  // Pancadas de neve forte
+        95: '⛈️',  // Trovoada
+        96: '⛈️',  // Trovoada com granizo leve
+        99: '⛈️'   // Trovoada com granizo forte
+    };
+    
+    return emojis[codigoClima] || '🌤️';
+}
+
 // Buscar dados meteorológicos da API
 async function buscarDadosClima() {
     try {
@@ -89,10 +126,10 @@ function exibirClima(dados) {
         tempEl.textContent = temp;
     }
     
-    // Ícone
+    // Ícone (usar emoji compatível)
     const iconeEl = document.getElementById('icone-clima');
     if (iconeEl) {
-        iconeEl.textContent = atual.icone_clima || '🌤️';
+        iconeEl.textContent = obterEmojiClima(atual.codigo_clima);
     }
     
     // Descrição
@@ -129,7 +166,7 @@ function preencherPrevisao3Dias(previsoes) {
                 diaElement.textContent = formatarDiaSemana(previsao.dia_semana || '--');
             }
             if (iconeElement) {
-                iconeElement.textContent = previsao.icone || '🌤️';
+                iconeElement.textContent = obterEmojiClima(previsao.codigo_clima);
             }
         } else {
             // Se não houver dados suficientes, mostrar "--"
@@ -139,7 +176,7 @@ function preencherPrevisao3Dias(previsoes) {
             
             if (tempElement) tempElement.textContent = '+--°C';
             if (diaElement) diaElement.textContent = '---';
-            if (iconeElement) iconeElement.textContent = '🌤️';
+            if (iconeElement) iconeElement.textContent = obterEmojiClima(2); // Código padrão: parcialmente nublado
         }
     }
 }

@@ -154,7 +154,7 @@ body {
 }
 
 .temperatura-sinal {
-    font-size: clamp(18px, 4.5vw + 2vh, 56px);
+    font-size: clamp(20px, 5vw + 2.5vh, 48px);
     font-weight: 700;
     color: #fff;
     text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.3);
@@ -162,7 +162,7 @@ body {
 }
 
 .temperatura-valor {
-    font-size: clamp(24px, 6vw + 3vh, 80px);
+    font-size: clamp(28px, 7vw + 3.5vh, 96px);
     font-weight: 700;
     color: #fff;
     text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.3);
@@ -170,7 +170,7 @@ body {
 }
 
 .temperatura-unidade {
-    font-size: clamp(18px, 4.5vw + 2vh, 56px);
+    font-size: clamp(20px, 5vw + 2.5vh, 48px);
     font-weight: 700;
     color: #fff;
     text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.3);
@@ -179,7 +179,7 @@ body {
 
 /* Ícone de Clima */
 .clima-icone-principal {
-    font-size: clamp(36px, 9vw + 4.5vh, 120px);
+    font-size: clamp(40px, 10vw + 5vh, 140px);
     line-height: 1;
     filter: drop-shadow(3px 3px 8px rgba(0, 0, 0, 0.2));
     text-align: center;
@@ -192,6 +192,10 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
+    font-family: 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', 'EmojiOne Color', 'Android Emoji', 'Twemoji Mozilla', Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: "liga" 1;
 }
 
 @keyframes float {
@@ -277,11 +281,15 @@ body {
 }
 
 .previsao-icone {
-    font-size: clamp(20px, 5vw, 48px);
+    font-size: clamp(24px, 6vw, 56px);
     line-height: 1;
     filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.2));
     text-align: center;
     opacity: 0.95;
+    font-family: 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', 'EmojiOne Color', 'Android Emoji', 'Twemoji Mozilla', Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: "liga" 1;
 }
 
 .previsao-dia {
@@ -371,19 +379,19 @@ body {
     }
 
     .temperatura-sinal {
-        font-size: clamp(22px, 5.5vw + 1.5vh, 36px);
+        font-size: clamp(18px, 4.5vw + 2vh, 32px);
     }
 
     .temperatura-valor {
-        font-size: clamp(30px, 7.5vw + 2.5vh, 52px);
+        font-size: clamp(32px, 8vw + 3vh, 64px);
     }
 
     .temperatura-unidade {
-        font-size: clamp(22px, 5.5vw + 1.5vh, 36px);
+        font-size: clamp(18px, 4.5vw + 2vh, 32px);
     }
 
     .clima-icone-principal {
-        font-size: clamp(38px, 9.5vw + 3.5vh, 64px);
+        font-size: clamp(32px, 8vw + 4vh, 64px);
     }
 
     .descricao-texto {
@@ -405,7 +413,7 @@ body {
     }
 
     .previsao-icone {
-        font-size: clamp(18px, 4.5vw, 28px);
+        font-size: clamp(20px, 5vw, 32px);
     }
 
     .previsao-dia {
@@ -429,19 +437,19 @@ body {
     }
 
     .temperatura-sinal {
-        font-size: clamp(16px, 4vw + 1vh, 28px);
+        font-size: clamp(14px, 3.5vw + 1.5vh, 24px);
     }
 
     .temperatura-valor {
-        font-size: clamp(22px, 5.5vw + 2vh, 40px);
+        font-size: clamp(28px, 7vw + 2.5vh, 48px);
     }
 
     .temperatura-unidade {
-        font-size: clamp(16px, 4vw + 1vh, 28px);
+        font-size: clamp(14px, 3.5vw + 1.5vh, 24px);
     }
 
     .clima-icone-principal {
-        font-size: clamp(28px, 7vw + 2.5vh, 48px);
+        font-size: clamp(28px, 7vw + 3vh, 48px);
     }
 
     .descricao-texto {
@@ -463,7 +471,7 @@ body {
     }
 
     .previsao-icone {
-        font-size: clamp(16px, 4vw, 24px);
+        font-size: clamp(18px, 4.5vw, 28px);
     }
 
     .previsao-dia {
@@ -495,19 +503,19 @@ body {
     }
 
     .temperatura-sinal {
-        font-size: clamp(24px, 6vw + 2vh, 40px);
+        font-size: clamp(20px, 5vw + 2.5vh, 36px);
     }
 
     .temperatura-valor {
-        font-size: clamp(36px, 9vw + 3.5vh, 64px);
+        font-size: clamp(36px, 9vw + 4vh, 80px);
     }
 
     .temperatura-unidade {
-        font-size: clamp(24px, 6vw + 2vh, 40px);
+        font-size: clamp(20px, 5vw + 2.5vh, 36px);
     }
 
     .clima-icone-principal {
-        font-size: clamp(56px, 14vw + 6vh, 100px);
+        font-size: clamp(48px, 12vw + 6vh, 100px);
         margin: 0;
     }
 
@@ -536,7 +544,7 @@ body {
     }
 
     .previsao-icone {
-        font-size: clamp(28px, 7vw, 44px);
+        font-size: clamp(24px, 6vw, 44px);
     }
 
     .previsao-dia {
@@ -560,19 +568,19 @@ body {
     }
 
     .temperatura-sinal {
-        font-size: clamp(12px, 3vw + 1vh, 20px);
+        font-size: clamp(10px, 2.5vw + 1vh, 18px);
     }
 
     .temperatura-valor {
-        font-size: clamp(16px, 4vw + 1.5vh, 28px);
+        font-size: clamp(20px, 5vw + 2vh, 32px);
     }
 
     .temperatura-unidade {
-        font-size: clamp(12px, 3vw + 1vh, 20px);
+        font-size: clamp(10px, 2.5vw + 1vh, 18px);
     }
 
     .clima-icone-principal {
-        font-size: clamp(24px, 6vw + 2.5vh, 40px);
+        font-size: clamp(24px, 6vw + 3vh, 40px);
     }
 
     .descricao-texto {
@@ -594,7 +602,7 @@ body {
     }
 
     .previsao-icone {
-        font-size: clamp(12px, 3vw, 18px);
+        font-size: clamp(14px, 3.5vw, 20px);
     }
 
     .previsao-dia {
