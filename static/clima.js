@@ -59,66 +59,50 @@ function formatarDataCompleta() {
     return `${diaSemana}, ${dia} de ${mes}`;
 }
 
-// Exibir dados meteorológicos na tela
+// Exibir dados meteorológicos na tela (atualiza sem esconder)
 function exibirClima(dados) {
-    const display = document.getElementById('clima-display');
     const loading = document.getElementById('loading');
     const erroScreen = document.getElementById('erro-screen');
     
-    // Esconder loading e erro
-    loading.classList.add('hidden');
-    erroScreen.classList.add('hidden');
+    // Esconder loading e erro (se ainda estiverem visíveis)
+    if (loading) loading.classList.add('hidden');
+    if (erroScreen) erroScreen.classList.add('hidden');
     
     if (!dados || !dados.atual) {
-        throw new Error('Dados meteorológicos inválidos');
+        console.warn('Dados meteorológicos inválidos - mantendo UI atual');
+        return; // Não quebrar a UI se dados estiverem inválidos
     }
     
     // Preencher dados atuais
     const atual = dados.atual;
     
-    // Atualizar nome da cidade (se disponível)
-    const cidadeElement = document.querySelector('.clima-cidade');
-    if (cidadeElement) {
-        const urlParams = new URLSearchParams(window.location.search);
-        const cidadeParam = urlParams.get('cidade');
-        const estadoParam = urlParams.get('estado') || urlParams.get('uf');
-
-        let nomeCidade = dados?.localizacao?.nome || '';
-
-        // Se o backend não retornou nome, monta a partir dos parâmetros
-        if (!nomeCidade && cidadeParam) {
-            nomeCidade = cidadeParam;
-            if (estadoParam) {
-                nomeCidade = `${cidadeParam} - ${estadoParam}`;
-            }
-        }
-
-        if (!nomeCidade) {
-            nomeCidade = 'Cidade não informada';
-        }
-
-        cidadeElement.textContent = nomeCidade;
+    // Atualizar nome da cidade (priorizar backend, mas manter URL se não vier)
+    const cidadeElement = document.getElementById('clima-cidade');
+    if (cidadeElement && dados.localizacao && dados.localizacao.nome) {
+        cidadeElement.textContent = dados.localizacao.nome.toUpperCase();
     }
 
-    // Data no topo
-    const dataElement = document.getElementById('clima-data-topo');
-    dataElement.textContent = formatarDataCompleta();
-    
     // Temperatura (sempre com sinal +)
-    const temp = atual.temperatura !== null ? Math.round(atual.temperatura) : '--';
-    document.getElementById('temperatura-atual').textContent = temp;
+    const tempEl = document.getElementById('temperatura-atual');
+    if (tempEl) {
+        const temp = atual.temperatura !== null ? Math.round(atual.temperatura) : '--';
+        tempEl.textContent = temp;
+    }
     
     // Ícone
-    document.getElementById('icone-clima').textContent = atual.icone_clima || '🌤️';
+    const iconeEl = document.getElementById('icone-clima');
+    if (iconeEl) {
+        iconeEl.textContent = atual.icone_clima || '🌤️';
+    }
     
     // Descrição
-    document.getElementById('descricao-clima').textContent = atual.descricao_clima || 'Dados indisponíveis';
+    const descEl = document.getElementById('descricao-clima');
+    if (descEl) {
+        descEl.textContent = atual.descricao_clima || 'Dados indisponíveis';
+    }
     
     // Preencher previsão 3 dias (próximos 3 dias, pulando hoje)
     preencherPrevisao3Dias(dados.previsao_diaria || []);
-    
-    // Mostrar display
-    display.classList.remove('hidden');
 }
 
 // Preencher previsão de 3 dias
@@ -173,28 +157,82 @@ function exibirErro(mensagem) {
     erroScreen.classList.remove('hidden');
 }
 
-// Carregar clima (função principal)
+// Carregar clima (função principal) - não bloqueia UI
 async function carregarClima() {
     const loading = document.getElementById('loading');
     const display = document.getElementById('clima-display');
     const erroScreen = document.getElementById('erro-screen');
     
-    // Mostrar loading
-    loading.classList.remove('hidden');
-    display.classList.add('hidden');
-    erroScreen.classList.add('hidden');
+    // Não esconder display (já está visível)
+    if (erroScreen) {
+        erroScreen.classList.add('hidden');
+    }
     
     try {
-        const dados = await buscarDadosClima();
+        // Timeout de 8 segundos para não travar em telas lentas
+        const timeoutPromise = new Promise((_, reject) => {
+            setTimeout(() => reject(new Error('Timeout')), 8000);
+        });
+        
+        const dadosPromise = buscarDadosClima();
+        const dados = await Promise.race([dadosPromise, timeoutPromise]);
+        
+        // Atualizar dados sem esconder a tela
         exibirClima(dados);
     } catch (error) {
         console.error('Erro ao carregar clima:', error);
-        exibirErro('Não foi possível carregar as condições meteorológicas. Verifique sua conexão com a internet.');
+        // Não mostrar erro imediatamente - manter dados visíveis
+        // Só mostrar erro se for crítico e após várias tentativas
+        if (error.message === 'Timeout') {
+            console.warn('Timeout na busca de dados - mantendo dados atuais ou padrão');
+        }
+    }
+}
+
+// Mostrar cidade e data imediatamente (sem esperar API)
+function inicializarUI() {
+    // Mostrar data imediatamente
+    const dataElement = document.getElementById('clima-data-topo');
+    if (dataElement) {
+        dataElement.textContent = formatarDataCompleta();
+    }
+    
+    // Mostrar cidade da URL imediatamente
+    const cidadeElement = document.getElementById('clima-cidade');
+    if (cidadeElement) {
+        const urlParams = new URLSearchParams(window.location.search);
+        const cidadeParam = urlParams.get('cidade');
+        const estadoParam = urlParams.get('estado') || urlParams.get('uf');
+        
+        if (cidadeParam) {
+            let nomeCidade = cidadeParam;
+            if (estadoParam) {
+                nomeCidade = `${cidadeParam} - ${estadoParam}`;
+            }
+            cidadeElement.textContent = nomeCidade.toUpperCase();
+        } else {
+            cidadeElement.textContent = 'CAJAZEIRAS - PB';
+        }
+    }
+    
+    // Mostrar display imediatamente (não esconder)
+    const display = document.getElementById('clima-display');
+    const loading = document.getElementById('loading');
+    if (display && loading) {
+        display.classList.remove('hidden');
+        // Esconder loading após um breve delay para mostrar estrutura
+        setTimeout(() => {
+            loading.classList.add('hidden');
+        }, 300);
     }
 }
 
 // Inicializar quando a página carregar
 document.addEventListener('DOMContentLoaded', () => {
+    // Inicializar UI imediatamente (sem esperar API)
+    inicializarUI();
+    
+    // Carregar dados em background (não bloqueia UI)
     carregarClima();
     
     // Atualizar a cada 30 minutos
