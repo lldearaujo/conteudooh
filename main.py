@@ -305,7 +305,8 @@ async def obter_dados_clima(cidade: str = None, estado: str = None):
                 logger.warning(f"Não foi possível obter coordenadas para a cidade: {cidade}. Usando padrão.")
 
         servico = criar_servico_clima(latitude=latitude, longitude=longitude)
-        dados = servico.obter_clima_atual()
+        # Passa nome_exibicao para o método que agora suporta cache
+        dados = servico.obter_clima_atual(nome_cidade=nome_exibicao)
         
         if dados is None:
             raise HTTPException(status_code=503, detail="Serviço meteorológico temporariamente indisponível")

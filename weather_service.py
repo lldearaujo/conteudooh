@@ -6,6 +6,7 @@ import requests
 from typing import Dict, Optional, Tuple
 from datetime import datetime, timedelta
 import logging
+import hashlib
 
 logger = logging.getLogger(__name__)
 
@@ -18,6 +19,14 @@ GEO_API_URL = "https://nominatim.openstreetmap.org/search"
 # Coordenadas padrão (Cajazeiras, PB - pode ser configurável)
 DEFAULT_LATITUDE = -6.8889
 DEFAULT_LONGITUDE = -38.5558
+
+# Cache em memória
+_cache_coordenadas = {}  # Cache de geocoding (TTL: 24h)
+_cache_clima = {}  # Cache de dados meteorológicos (TTL: 10min)
+
+# TTLs (Time To Live)
+TTL_COORDENADAS = timedelta(hours=24)  # Coordenadas raramente mudam
+TTL_CLIMA = timedelta(minutes=10)  # Clima atualiza a cada 10 minutos
 
 
 class WeatherService:
@@ -35,13 +44,33 @@ class WeatherService:
         self.longitude = longitude
         self.timeout = 10  # Timeout de 10 segundos
     
-    def obter_clima_atual(self) -> Optional[Dict]:
+    def obter_clima_atual(self, nome_cidade: str = "Cajazeiras - PB") -> Optional[Dict]:
         """
         Obtém as condições meteorológicas atuais e previsão para os próximos dias
+        Usa cache para acelerar respostas repetidas.
+        
+        Args:
+            nome_cidade: Nome da cidade para cache key
         
         Returns:
             Dict com dados meteorológicos ou None em caso de erro
         """
+        # Criar chave de cache baseada em lat/lon (arredondado para evitar duplicatas)
+        cache_key = f"{round(self.latitude, 4)}_{round(self.longitude, 4)}"
+        
+        # Verificar cache
+        if cache_key in _cache_clima:
+            cached_data, cached_time = _cache_clima[cache_key]
+            if datetime.now() - cached_time < TTL_CLIMA:
+                logger.info(f"Retornando dados de clima do cache para {nome_cidade}")
+                # Atualizar nome da cidade no cache antes de retornar
+                if "localizacao" in cached_data:
+                    cached_data["localizacao"]["nome"] = nome_cidade
+                return cached_data
+            else:
+                # Cache expirado, remover
+                del _cache_clima[cache_key]
+        
         try:
             # Parâmetros da API Open-Meteo
             params = {
@@ -63,7 +92,13 @@ class WeatherService:
             data = response.json()
             
             # Processar e estruturar os dados
-            return self._processar_dados(data)
+            resultado = self._processar_dados(data, nome_cidade)
+            
+            # Salvar no cache
+            _cache_clima[cache_key] = (resultado, datetime.now())
+            logger.info(f"Dados de clima salvos no cache para {nome_cidade}")
+            
+            return resultado
             
         except requests.exceptions.RequestException as e:
             logger.error(f"Erro ao buscar dados meteorológicos: {e}")
@@ -154,7 +189,8 @@ class WeatherService:
     @staticmethod
     def buscar_coordenadas(cidade: str, estado: Optional[str] = None, pais: str = "Brasil") -> Optional[Dict]:
         """
-        Busca latitude e longitude pelo nome da cidade usando a API de Geocoding do Open-Meteo
+        Busca latitude e longitude pelo nome da cidade usando a API de Geocoding.
+        Usa cache para evitar requisições repetidas (TTL: 24h).
         
         Args:
             cidade: Nome da cidade (ex: "Campina Grande", "São Paulo")
@@ -167,6 +203,20 @@ class WeatherService:
         try:
             if not cidade:
                 return None
+
+            # Criar chave de cache
+            cache_key = f"{cidade.lower()}_{estado.lower() if estado else ''}_{pais.lower()}"
+            cache_key = hashlib.md5(cache_key.encode()).hexdigest()
+            
+            # Verificar cache
+            if cache_key in _cache_coordenadas:
+                cached_data, cached_time = _cache_coordenadas[cache_key]
+                if datetime.now() - cached_time < TTL_COORDENADAS:
+                    logger.info(f"Retornando coordenadas do cache para {cidade}, {estado}")
+                    return cached_data
+                else:
+                    # Cache expirado, remover
+                    del _cache_coordenadas[cache_key]
 
             # Monta parâmetros para Nominatim
             params = {
@@ -206,12 +256,18 @@ class WeatherService:
             if estado:
                 nome_formatado = f"{cidade} - {estado}"
 
-            return {
+            resultado_final = {
                 "latitude": lat,
                 "longitude": lon,
                 "nome_formatado": nome_formatado,
                 "nome_completo": nome_cidade,
             }
+            
+            # Salvar no cache
+            _cache_coordenadas[cache_key] = (resultado_final, datetime.now())
+            logger.info(f"Coordenadas salvas no cache para {cidade}, {estado}")
+            
+            return resultado_final
         except requests.exceptions.RequestException as e:
             logger.error(f"Erro na requisição de geocoding: {e}")
             return None
