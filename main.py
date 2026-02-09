@@ -37,6 +37,10 @@ if os.path.exists("static"):
 if os.path.exists("medias"):
     app.mount("/medias", StaticFiles(directory="medias"), name="medias")
 
+# Montar pasta de ícones
+if os.path.exists("icones"):
+    app.mount("/icones", StaticFiles(directory="icones"), name="icones")
+
 # Iniciar scheduler para atualização automática
 iniciar_scheduler()
 

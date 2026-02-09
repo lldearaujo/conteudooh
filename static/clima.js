@@ -3,56 +3,58 @@
  * Gerencia a exibição de dados meteorológicos
  */
 
-// Função para obter emoji compatível com qualquer display
-function obterEmojiClima(codigoClima) {
+// Função para obter caminho da imagem PNG baseado no código do clima
+function obterIconeClima(codigoClima) {
     // Tratar valores null, undefined ou inválidos
     if (codigoClima === null || codigoClima === undefined || isNaN(codigoClima)) {
         console.warn('Código de clima inválido:', codigoClima);
-        return '🌤️'; // Fallback padrão
+        return '/icones/parcialmente%20nublado.png'; // Fallback padrão
     }
     
     // Converter para número inteiro
     const codigo = parseInt(codigoClima, 10);
     
-    // Mapeamento de códigos WMO para emojis universais
-    const emojis = {
-        0: '☀️',   // Céu limpo
-        1: '🌤️',   // Principalmente limpo
-        2: '🌤️',   // Parcialmente nublado
-        3: '☁️',   // Nublado
-        45: '🌫️',  // Nevoeiro
-        48: '🌫️',  // Nevoeiro com geada
-        51: '🌦️',  // Garoa leve
-        53: '🌦️',  // Garoa moderada
-        55: '🌦️',  // Garoa densa
-        56: '🌦️',  // Garoa congelante leve
-        57: '🌦️',  // Garoa congelante densa
-        61: '🌧️',  // Chuva leve
-        63: '🌧️',  // Chuva moderada
-        65: '🌧️',  // Chuva forte
-        66: '🌧️',  // Chuva congelante leve
-        67: '🌧️',  // Chuva congelante forte
-        71: '❄️',  // Queda de neve leve
-        73: '❄️',  // Queda de neve moderada
-        75: '❄️',  // Queda de neve forte
-        77: '❄️',  // Grãos de neve
-        80: '⛈️',  // Pancadas de chuva leve
-        81: '⛈️',  // Pancadas de chuva moderada
-        82: '⛈️',  // Pancadas de chuva forte
-        85: '🌨️',  // Pancadas de neve leve
-        86: '🌨️',  // Pancadas de neve forte
-        95: '⛈️',  // Trovoada
-        96: '⛈️',  // Trovoada com granizo leve
-        99: '⛈️'   // Trovoada com granizo forte
+    // Mapeamento de códigos WMO para arquivos PNG
+    const icones = {
+        0: 'Ensolarado.png',                    // Céu limpo
+        1: 'parcialmente nublado.png',          // Principalmente limpo
+        2: 'parcialmente nublado.png',           // Parcialmente nublado
+        3: 'Céu Encoberto.png',                  // Nublado
+        45: 'Céu Encoberto.png',                 // Nevoeiro
+        48: 'Céu Encoberto.png',                 // Nevoeiro com geada
+        51: 'chuva.png',                         // Garoa leve
+        53: 'chuva.png',                         // Garoa moderada
+        55: 'chuva.png',                         // Garoa densa
+        56: 'chuva.png',                         // Garoa congelante leve
+        57: 'chuva.png',                         // Garoa congelante densa
+        61: 'chuva.png',                         // Chuva leve
+        63: 'chuva.png',                         // Chuva moderada
+        65: 'chuva.png',                         // Chuva forte
+        66: 'chuva.png',                         // Chuva congelante leve
+        67: 'chuva.png',                         // Chuva congelante forte
+        71: 'chuva.png',                         // Queda de neve leve (fallback)
+        73: 'chuva.png',                         // Queda de neve moderada (fallback)
+        75: 'chuva.png',                         // Queda de neve forte (fallback)
+        77: 'chuva.png',                         // Grãos de neve (fallback)
+        80: 'chuva_com_trovoadas.png',           // Pancadas de chuva leve
+        81: 'chuva_com_trovoadas.png',           // Pancadas de chuva moderada
+        82: 'chuva_com_trovoadas.png',           // Pancadas de chuva forte
+        85: 'chuva.png',                         // Pancadas de neve leve (fallback)
+        86: 'chuva.png',                         // Pancadas de neve forte (fallback)
+        95: 'Tempestade.png',                    // Trovoada
+        96: 'chuva_com_trovoadas.png',           // Trovoada com granizo leve
+        99: 'Tempestade.png'                     // Trovoada com granizo forte
     };
     
-    const emoji = emojis[codigo];
-    if (!emoji) {
+    const nomeArquivo = icones[codigo];
+    if (!nomeArquivo) {
         console.warn('Código de clima não mapeado:', codigo);
-        return '🌤️'; // Fallback padrão
+        return '/icones/parcialmente%20nublado.png'; // Fallback padrão
     }
     
-    return emoji;
+    // Codificar espaços e caracteres especiais na URL
+    const nomeArquivoCodificado = encodeURIComponent(nomeArquivo);
+    return `/icones/${nomeArquivoCodificado}`;
 }
 
 // Buscar dados meteorológicos da API
@@ -141,7 +143,7 @@ function exibirClima(dados) {
         tempEl.textContent = temp;
     }
     
-    // Ícone (usar emoji compatível)
+    // Ícone (usar imagem PNG)
     const iconeEl = document.getElementById('icone-clima');
     if (iconeEl) {
         // Tentar obter código do clima
@@ -152,13 +154,23 @@ function exibirClima(dados) {
             codigo = 2; // Fallback para parcialmente nublado
         }
         
-        const emoji = obterEmojiClima(codigo);
-        iconeEl.textContent = emoji;
+        const caminhoIcone = obterIconeClima(codigo);
         
-        // Garantir que o ícone seja sempre visível
-        if (!emoji || emoji.trim() === '') {
-            iconeEl.textContent = '🌤️';
+        // Verificar se já existe uma imagem, se não, criar
+        let imgEl = iconeEl.querySelector('img');
+        if (!imgEl) {
+            imgEl = document.createElement('img');
+            imgEl.alt = 'Ícone do clima';
+            imgEl.className = 'icone-clima-img';
+            iconeEl.innerHTML = ''; // Limpar conteúdo anterior (emoji)
+            iconeEl.appendChild(imgEl);
         }
+        
+        imgEl.src = caminhoIcone;
+        imgEl.onerror = function() {
+            // Se a imagem não carregar, usar fallback
+            this.src = '/icones/parcialmente%20nublado.png';
+        };
         
         // Forçar renderização e visibilidade
         iconeEl.style.display = 'flex';
@@ -203,17 +215,26 @@ function preencherPrevisao3Dias(previsoes) {
                 // Tentar obter código do clima de várias fontes
                 let codigo = previsao.codigo_clima;
                 if (codigo === null || codigo === undefined) {
-                    // Tentar usar o ícone existente se disponível
-                    codigo = previsao.icone ? null : 2; // Fallback para parcialmente nublado
+                    codigo = 2; // Fallback para parcialmente nublado
                 }
                 
-                const emoji = obterEmojiClima(codigo);
-                iconeElement.textContent = emoji;
+                const caminhoIcone = obterIconeClima(codigo);
                 
-                // Garantir que o ícone seja sempre visível
-                if (!emoji || emoji.trim() === '' || emoji === '🌤️' && codigo === null) {
-                    iconeElement.textContent = '🌤️'; // Fallback garantido
+                // Verificar se já existe uma imagem, se não, criar
+                let imgEl = iconeElement.querySelector('img');
+                if (!imgEl) {
+                    imgEl = document.createElement('img');
+                    imgEl.alt = 'Ícone do clima';
+                    imgEl.className = 'previsao-icone-img';
+                    iconeElement.innerHTML = ''; // Limpar conteúdo anterior (emoji)
+                    iconeElement.appendChild(imgEl);
                 }
+                
+                imgEl.src = caminhoIcone;
+                imgEl.onerror = function() {
+                    // Se a imagem não carregar, usar fallback
+                    this.src = '/icones/parcialmente nublado.png';
+                };
                 
                 // Forçar renderização
                 iconeElement.style.display = 'block';
@@ -228,7 +249,24 @@ function preencherPrevisao3Dias(previsoes) {
             if (tempElement) tempElement.textContent = '+--°C';
             if (diaElement) diaElement.textContent = '---';
             if (iconeElement) {
-                iconeElement.textContent = obterEmojiClima(2); // Código padrão: parcialmente nublado
+                const caminhoIcone = obterIconeClima(2); // Código padrão: parcialmente nublado
+                
+                // Verificar se já existe uma imagem, se não, criar
+                let imgEl = iconeElement.querySelector('img');
+                if (!imgEl) {
+                    imgEl = document.createElement('img');
+                    imgEl.alt = 'Ícone do clima';
+                    imgEl.className = 'previsao-icone-img';
+                    iconeElement.innerHTML = ''; // Limpar conteúdo anterior (emoji)
+                    iconeElement.appendChild(imgEl);
+                }
+                
+                imgEl.src = caminhoIcone;
+                imgEl.onerror = function() {
+                    // Se a imagem não carregar, usar fallback
+                    this.src = '/icones/parcialmente nublado.png';
+                };
+                
                 iconeElement.style.display = 'block';
                 iconeElement.style.visibility = 'visible';
             }

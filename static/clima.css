@@ -179,10 +179,6 @@ body {
 
 /* Ícone de Clima */
 .clima-icone-principal {
-    font-size: clamp(40px, 10vw + 5vh, 140px);
-    line-height: 1;
-    filter: drop-shadow(3px 3px 8px rgba(0, 0, 0, 0.2));
-    text-align: center;
     flex-shrink: 0;
     width: 100%;
     min-height: fit-content;
@@ -193,12 +189,15 @@ body {
     visibility: visible !important;
     justify-content: center;
     align-items: center;
-    font-family: 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', 'EmojiOne Color', 'Android Emoji', 'Twemoji Mozilla', Arial, sans-serif;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    font-feature-settings: "liga" 1;
-    min-height: 1em;
-    min-width: 1em;
+}
+
+.clima-icone-principal .icone-clima-img {
+    width: clamp(40px, 10vw + 5vh, 140px);
+    height: clamp(40px, 10vw + 5vh, 140px);
+    object-fit: contain;
+    filter: drop-shadow(3px 3px 8px rgba(0, 0, 0, 0.2));
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
 }
 
 @keyframes float {
@@ -284,19 +283,22 @@ body {
 }
 
 .previsao-icone {
-    font-size: clamp(24px, 6vw, 56px);
-    line-height: 1;
-    filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.2));
-    text-align: center;
-    opacity: 0.95;
-    font-family: 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', 'EmojiOne Color', 'Android Emoji', 'Twemoji Mozilla', Arial, sans-serif;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    font-feature-settings: "liga" 1;
-    display: block !important;
+    display: flex !important;
+    justify-content: center;
+    align-items: center;
     visibility: visible !important;
-    min-height: 1em;
-    min-width: 1em;
+    opacity: 0.95;
+    min-height: fit-content;
+    min-width: fit-content;
+}
+
+.previsao-icone .previsao-icone-img {
+    width: clamp(24px, 6vw, 56px);
+    height: clamp(24px, 6vw, 56px);
+    object-fit: contain;
+    filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.2));
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
 }
 
 .previsao-dia {
@@ -397,8 +399,9 @@ body {
         font-size: clamp(18px, 4.5vw + 2vh, 32px);
     }
 
-    .clima-icone-principal {
-        font-size: clamp(32px, 8vw + 4vh, 64px);
+    .clima-icone-principal .icone-clima-img {
+        width: clamp(32px, 8vw + 4vh, 64px);
+        height: clamp(32px, 8vw + 4vh, 64px);
     }
 
     .descricao-texto {
@@ -419,8 +422,9 @@ body {
         font-size: clamp(10px, 2.5vw, 14px);
     }
 
-    .previsao-icone {
-        font-size: clamp(20px, 5vw, 32px);
+    .previsao-icone .previsao-icone-img {
+        width: clamp(20px, 5vw, 32px);
+        height: clamp(20px, 5vw, 32px);
     }
 
     .previsao-dia {
@@ -455,8 +459,9 @@ body {
         font-size: clamp(14px, 3.5vw + 1.5vh, 24px);
     }
 
-    .clima-icone-principal {
-        font-size: clamp(28px, 7vw + 3vh, 48px);
+    .clima-icone-principal .icone-clima-img {
+        width: clamp(28px, 7vw + 3vh, 48px);
+        height: clamp(28px, 7vw + 3vh, 48px);
     }
 
     .descricao-texto {
@@ -477,8 +482,9 @@ body {
         font-size: clamp(8px, 2vw, 12px);
     }
 
-    .previsao-icone {
-        font-size: clamp(18px, 4.5vw, 28px);
+    .previsao-icone .previsao-icone-img {
+        width: clamp(18px, 4.5vw, 28px);
+        height: clamp(18px, 4.5vw, 28px);
     }
 
     .previsao-dia {
@@ -521,8 +527,12 @@ body {
         font-size: clamp(20px, 5vw + 2.5vh, 36px);
     }
 
+    .clima-icone-principal .icone-clima-img {
+        width: clamp(48px, 12vw + 6vh, 100px);
+        height: clamp(48px, 12vw + 6vh, 100px);
+    }
+    
     .clima-icone-principal {
-        font-size: clamp(48px, 12vw + 6vh, 100px);
         margin: 0;
     }
 
@@ -550,8 +560,9 @@ body {
         font-size: clamp(12px, 3vw, 18px);
     }
 
-    .previsao-icone {
-        font-size: clamp(24px, 6vw, 44px);
+    .previsao-icone .previsao-icone-img {
+        width: clamp(24px, 6vw, 44px);
+        height: clamp(24px, 6vw, 44px);
     }
 
     .previsao-dia {
@@ -586,8 +597,9 @@ body {
         font-size: clamp(10px, 2.5vw + 1vh, 18px);
     }
 
-    .clima-icone-principal {
-        font-size: clamp(24px, 6vw + 3vh, 40px);
+    .clima-icone-principal .icone-clima-img {
+        width: clamp(24px, 6vw + 3vh, 40px);
+        height: clamp(24px, 6vw + 3vh, 40px);
     }
 
     .descricao-texto {
@@ -608,8 +620,9 @@ body {
         font-size: clamp(6px, 1.5vw, 9px);
     }
 
-    .previsao-icone {
-        font-size: clamp(14px, 3.5vw, 20px);
+    .previsao-icone .previsao-icone-img {
+        width: clamp(14px, 3.5vw, 20px);
+        height: clamp(14px, 3.5vw, 20px);
     }
 
     .previsao-dia {

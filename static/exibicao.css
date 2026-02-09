@@ -1441,7 +1441,9 @@ img {
 .noticia-conteudo-imagem .noticia-titulo,
 .noticia-conteudo-imagem .noticia-data {
     position: relative;
-    z-index: inherit;
+    /* Garantir que o texto fique sempre acima da imagem e do overlay,
+       inclusive em telas maiores que 480px */
+    z-index: 6;
 }
 
 /* Garantir que não haja elementos vermelhos ou de debug visíveis */
