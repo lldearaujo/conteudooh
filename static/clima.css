@@ -12,6 +12,20 @@
     -webkit-tap-highlight-color: transparent;
 }
 
+/* Garantir renderização correta de imagens PNG no Chromium */
+img.icone-clima-img,
+img.previsao-icone-img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    object-position: center;
+    display: block;
+    image-rendering: auto;
+    -webkit-image-rendering: auto;
+    image-rendering: -webkit-optimize-contrast;
+    vertical-align: middle;
+}
+
 html, body {
     width: 100%;
     height: 100%;
@@ -194,10 +208,15 @@ body {
 .clima-icone-principal .icone-clima-img {
     width: clamp(40px, 10vw + 5vh, 140px);
     height: clamp(40px, 10vw + 5vh, 140px);
+    max-width: 100%;
+    max-height: 100%;
     object-fit: contain;
+    object-position: center;
     filter: drop-shadow(3px 3px 8px rgba(0, 0, 0, 0.2));
+    display: block;
+    image-rendering: auto;
+    -webkit-image-rendering: auto;
     image-rendering: -webkit-optimize-contrast;
-    image-rendering: crisp-edges;
 }
 
 @keyframes float {
@@ -295,10 +314,15 @@ body {
 .previsao-icone .previsao-icone-img {
     width: clamp(24px, 6vw, 56px);
     height: clamp(24px, 6vw, 56px);
+    max-width: 100%;
+    max-height: 100%;
     object-fit: contain;
+    object-position: center;
     filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.2));
+    display: block;
+    image-rendering: auto;
+    -webkit-image-rendering: auto;
     image-rendering: -webkit-optimize-contrast;
-    image-rendering: crisp-edges;
 }
 
 .previsao-dia {
