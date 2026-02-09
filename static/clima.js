@@ -3,53 +3,100 @@
  * Gerencia a exibição de dados meteorológicos
  */
 
-// Função para obter caminho da imagem PNG baseado no código do clima
-function obterIconeClima(codigoClima) {
+// Função auxiliar para verificar se é dia ou noite
+// Dia: 06:00 - 17:59, Noite: 18:00 - 05:59
+function isDia(hora) {
+    if (hora === null || hora === undefined) {
+        // Se não for informado, usar hora atual
+        hora = new Date().getHours();
+    }
+    return hora >= 6 && hora < 18;
+}
+
+// Função para obter caminho da imagem PNG baseado no código do clima e horário
+function obterIconeClima(codigoClima, horaAtual) {
     // Tratar valores null, undefined ou inválidos
     if (codigoClima === null || codigoClima === undefined || isNaN(codigoClima)) {
         console.warn('Código de clima inválido:', codigoClima);
-        return '/icones/parcialmente%20nublado.png'; // Fallback padrão
+        const fallback = isDia(horaAtual) ? 'parcialmente ensolarado_dia.png' : 'parcialmente_nubaldo_noite.png';
+        return `/icones/${encodeURIComponent(fallback)}`;
     }
     
     // Converter para número inteiro
     const codigo = parseInt(codigoClima, 10);
+    const dia = isDia(horaAtual);
     
-    // Mapeamento de códigos WMO para arquivos PNG
-    const icones = {
-        0: 'Ensolarado.png',                    // Céu limpo
-        1: 'parcialmente nublado.png',          // Principalmente limpo
-        2: 'parcialmente nublado.png',           // Parcialmente nublado
-        3: 'Céu Encoberto.png',                  // Nublado
-        45: 'Céu Encoberto.png',                 // Nevoeiro
-        48: 'Céu Encoberto.png',                 // Nevoeiro com geada
-        51: 'chuva.png',                         // Garoa leve
-        53: 'chuva.png',                         // Garoa moderada
-        55: 'chuva.png',                         // Garoa densa
-        56: 'chuva.png',                         // Garoa congelante leve
-        57: 'chuva.png',                         // Garoa congelante densa
-        61: 'chuva.png',                         // Chuva leve
-        63: 'chuva.png',                         // Chuva moderada
-        65: 'chuva.png',                         // Chuva forte
-        66: 'chuva.png',                         // Chuva congelante leve
-        67: 'chuva.png',                         // Chuva congelante forte
-        71: 'chuva.png',                         // Queda de neve leve (fallback)
-        73: 'chuva.png',                         // Queda de neve moderada (fallback)
-        75: 'chuva.png',                         // Queda de neve forte (fallback)
-        77: 'chuva.png',                         // Grãos de neve (fallback)
-        80: 'chuva_com_trovoadas.png',           // Pancadas de chuva leve
-        81: 'chuva_com_trovoadas.png',           // Pancadas de chuva moderada
-        82: 'chuva_com_trovoadas.png',           // Pancadas de chuva forte
-        85: 'chuva.png',                         // Pancadas de neve leve (fallback)
-        86: 'chuva.png',                         // Pancadas de neve forte (fallback)
-        95: 'Tempestade.png',                    // Trovoada
-        96: 'chuva_com_trovoadas.png',           // Trovoada com granizo leve
-        99: 'Tempestade.png'                     // Trovoada com granizo forte
-    };
+    // Determinar o ícone baseado no código e horário
+    let nomeArquivo;
     
-    const nomeArquivo = icones[codigo];
-    if (!nomeArquivo) {
-        console.warn('Código de clima não mapeado:', codigo);
-        return '/icones/parcialmente%20nublado.png'; // Fallback padrão
+    switch (codigo) {
+        case 0: // Céu limpo
+            nomeArquivo = dia ? 'tempo_limpo_dia.png' : 'tempo_limpo_noite.png';
+            break;
+            
+        case 1: // Principalmente limpo
+        case 2: // Parcialmente nublado
+            nomeArquivo = dia ? 'parcialmente ensolarado_dia.png' : 'parcialmente_nubaldo_noite.png';
+            break;
+            
+        case 3: // Nublado
+            nomeArquivo = 'nublado.png';
+            break;
+            
+        case 45: // Nevoeiro
+        case 48: // Nevoeiro com geada
+            nomeArquivo = 'ceu_encoberto.png';
+            break;
+            
+        case 51: // Garoa leve
+        case 53: // Garoa moderada
+        case 55: // Garoa densa
+        case 56: // Garoa congelante leve
+        case 57: // Garoa congelante densa
+            // Durante o dia: chuva com sol, durante a noite: chuva leve
+            nomeArquivo = dia ? 'chuva_ensolarada.png' : 'chuva_leve.png';
+            break;
+            
+        case 61: // Chuva leve
+            // Durante o dia: chuva com sol, durante a noite: chuva leve
+            nomeArquivo = dia ? 'chuva_ensolarada.png' : 'chuva_leve.png';
+            break;
+            
+        case 63: // Chuva moderada
+        case 65: // Chuva forte
+        case 66: // Chuva congelante leve
+        case 67: // Chuva congelante forte
+            nomeArquivo = 'chuva_moderada.png';
+            break;
+            
+        case 71: // Queda de neve leve (fallback)
+        case 73: // Queda de neve moderada (fallback)
+        case 75: // Queda de neve forte (fallback)
+        case 77: // Grãos de neve (fallback)
+            nomeArquivo = 'chuva_moderada.png';
+            break;
+            
+        case 80: // Pancadas de chuva leve
+        case 81: // Pancadas de chuva moderada
+        case 82: // Pancadas de chuva forte
+            // Durante o dia: chuva com sol, durante a noite: chuva moderada
+            nomeArquivo = dia ? 'chuva_ensolarada.png' : 'chuva_moderada.png';
+            break;
+            
+        case 85: // Pancadas de neve leve (fallback)
+        case 86: // Pancadas de neve forte (fallback)
+            nomeArquivo = 'chuva_moderada.png';
+            break;
+            
+        case 95: // Trovoada
+        case 96: // Trovoada com granizo leve
+        case 99: // Trovoada com granizo forte
+            nomeArquivo = 'tempestade.png';
+            break;
+            
+        default:
+            console.warn('Código de clima não mapeado:', codigo);
+            nomeArquivo = dia ? 'parcialmente ensolarado_dia.png' : 'parcialmente_nubaldo_noite.png';
     }
     
     // Codificar espaços e caracteres especiais na URL
@@ -154,7 +201,9 @@ function exibirClima(dados) {
             codigo = 2; // Fallback para parcialmente nublado
         }
         
-        const caminhoIcone = obterIconeClima(codigo);
+        // Obter hora atual para determinar se é dia ou noite
+        const horaAtual = new Date().getHours();
+        const caminhoIcone = obterIconeClima(codigo, horaAtual);
         
         // Verificar se já existe uma imagem, se não, criar
         let imgEl = iconeEl.querySelector('img');
@@ -168,8 +217,10 @@ function exibirClima(dados) {
         
         imgEl.src = caminhoIcone;
         imgEl.onerror = function() {
-            // Se a imagem não carregar, usar fallback
-            this.src = '/icones/parcialmente%20nublado.png';
+            // Se a imagem não carregar, usar fallback baseado no horário
+            const horaAtual = new Date().getHours();
+            const fallback = isDia(horaAtual) ? 'parcialmente ensolarado_dia.png' : 'parcialmente_nubaldo_noite.png';
+            this.src = `/icones/${encodeURIComponent(fallback)}`;
         };
         
         // Forçar renderização e visibilidade
@@ -218,7 +269,10 @@ function preencherPrevisao3Dias(previsoes) {
                     codigo = 2; // Fallback para parcialmente nublado
                 }
                 
-                const caminhoIcone = obterIconeClima(codigo);
+                // Para previsão, considerar como dia (horário típico de exibição)
+                // Ou usar hora atual se preferir
+                const horaAtual = new Date().getHours();
+                const caminhoIcone = obterIconeClima(codigo, horaAtual);
                 
                 // Verificar se já existe uma imagem, se não, criar
                 let imgEl = iconeElement.querySelector('img');
@@ -232,8 +286,10 @@ function preencherPrevisao3Dias(previsoes) {
                 
                 imgEl.src = caminhoIcone;
                 imgEl.onerror = function() {
-                    // Se a imagem não carregar, usar fallback
-                    this.src = '/icones/parcialmente nublado.png';
+                    // Se a imagem não carregar, usar fallback baseado no horário
+                    const horaAtual = new Date().getHours();
+                    const fallback = isDia(horaAtual) ? 'parcialmente ensolarado_dia.png' : 'parcialmente_nubaldo_noite.png';
+                    this.src = `/icones/${encodeURIComponent(fallback)}`;
                 };
                 
                 // Forçar renderização
@@ -249,7 +305,9 @@ function preencherPrevisao3Dias(previsoes) {
             if (tempElement) tempElement.textContent = '+--°C';
             if (diaElement) diaElement.textContent = '---';
             if (iconeElement) {
-                const caminhoIcone = obterIconeClima(2); // Código padrão: parcialmente nublado
+                // Para previsão sem dados, usar hora atual para determinar dia/noite
+                const horaAtual = new Date().getHours();
+                const caminhoIcone = obterIconeClima(2, horaAtual); // Código padrão: parcialmente nublado
                 
                 // Verificar se já existe uma imagem, se não, criar
                 let imgEl = iconeElement.querySelector('img');
@@ -263,8 +321,10 @@ function preencherPrevisao3Dias(previsoes) {
                 
                 imgEl.src = caminhoIcone;
                 imgEl.onerror = function() {
-                    // Se a imagem não carregar, usar fallback
-                    this.src = '/icones/parcialmente nublado.png';
+                    // Se a imagem não carregar, usar fallback baseado no horário
+                    const horaAtual = new Date().getHours();
+                    const fallback = isDia(horaAtual) ? 'parcialmente ensolarado_dia.png' : 'parcialmente_nubaldo_noite.png';
+                    this.src = `/icones/${encodeURIComponent(fallback)}`;
                 };
                 
                 iconeElement.style.display = 'block';
