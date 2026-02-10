@@ -16,15 +16,29 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 from database import engine, get_db, Base
-from models import Noticia
+from models import Noticia, Link, Click
+from schemas import LinkCreate, LinkResponse, LinkList, AnalyticsResponse, LinkAnalytics, TopLink
+from tracking_service import TrackingService
+from analytics_service import AnalyticsService
 from scraper import RadiocentroScraper
 from scheduler import iniciar_scheduler
 from weather_service import criar_servico_clima, WeatherService
+from fastapi.responses import RedirectResponse
+from fastapi.middleware.cors import CORSMiddleware
 
 # Criar tabelas
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="ConteudoOH - Sistema de Mídia Indoor/DOOH")
+
+# Configurar CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Em produção, especificar origins
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Configurar templates
 templates = Environment(loader=FileSystemLoader("templates"))
@@ -197,8 +211,9 @@ async def toggle_noticia(noticia_id: int, db: Session = Depends(get_db)):
     return noticia.to_dict()
 
 @app.get("/api/noticias/{noticia_id}/qrcode")
-async def gerar_qrcode_noticia(noticia_id: int, db: Session = Depends(get_db), tamanho: str = "normal"):
+async def gerar_qrcode_noticia(noticia_id: int, request: Request, db: Session = Depends(get_db), tamanho: str = "normal"):
     """Gera um QR code do link da matéria - otimizado para telas de baixa resolução
+    Integrado com sistema de tracking: QR code aponta para link rastreável
     
     Parâmetros:
     - tamanho: "pequeno" para telas muito pequenas (128x192, 160x240) ou "normal" para outras
@@ -225,7 +240,37 @@ async def gerar_qrcode_noticia(noticia_id: int, db: Session = Depends(get_db), t
             else:
                 url = 'https://' + url
         
-        print(f"[QR Code] Gerando QR code para URL: {url}")
+        # Criar ou buscar link rastreável para esta notícia
+        identifier = f"noticia-{noticia_id}"
+        link = db.query(Link).filter(Link.identifier == identifier).first()
+        
+        if not link:
+            # Criar novo link rastreável
+            # Truncar título se necessário para campanha (máx 200 chars)
+            campanha = noticia.titulo[:200] if noticia.titulo and len(noticia.titulo) > 200 else (noticia.titulo or "Notícia")
+            
+            link = Link(
+                identifier=identifier,
+                destination_url=url,
+                ponto_dooh="Notícias",
+                campanha=campanha
+            )
+            db.add(link)
+            db.commit()
+            db.refresh(link)
+            print(f"[QR Code] Link rastreável criado: {identifier}")
+        else:
+            # Atualizar URL de destino se mudou
+            if link.destination_url != url:
+                link.destination_url = url
+                db.commit()
+                print(f"[QR Code] Link rastreável atualizado: {identifier}")
+        
+        # Gerar URL do link rastreável
+        base_url = str(request.base_url).rstrip('/')
+        tracking_url = f"{base_url}/r/{identifier}"
+        
+        print(f"[QR Code] Gerando QR code para URL rastreável: {tracking_url}")
         
         # Configurações diferentes para telas pequenas vs normais
         if tamanho == "pequeno":
@@ -248,7 +293,7 @@ async def gerar_qrcode_noticia(noticia_id: int, db: Session = Depends(get_db), t
             box_size=box_size,
             border=border,
         )
-        qr.add_data(url)
+        qr.add_data(tracking_url)
         qr.make(fit=True)
         
         # Criar imagem com alto contraste
@@ -326,6 +371,140 @@ async def obter_dados_clima(cidade: str = None, estado: str = None):
     except Exception as e:
         logger.error(f"Erro ao obter dados climáticos: {e}")
         raise HTTPException(status_code=500, detail="Erro ao buscar dados meteorológicos")
+
+# ============================================
+# LINK TRACKING SYSTEM - Endpoints
+# ============================================
+
+# Gestão de Links
+@app.post("/api/links", response_model=LinkResponse, status_code=201)
+async def criar_link(link_data: LinkCreate, db: Session = Depends(get_db)):
+    """Cria um novo link rastreável"""
+    # Verificar se identifier já existe
+    link_existente = db.query(Link).filter(Link.identifier == link_data.identifier).first()
+    if link_existente:
+        raise HTTPException(status_code=400, detail=f"Link com identifier '{link_data.identifier}' já existe")
+    
+    # Criar novo link
+    novo_link = Link(
+        identifier=link_data.identifier,
+        destination_url=str(link_data.destination_url),
+        ponto_dooh=link_data.ponto_dooh,
+        campanha=link_data.campanha
+    )
+    
+    db.add(novo_link)
+    db.commit()
+    db.refresh(novo_link)
+    
+    # Retornar com total_clicks = 0
+    link_dict = novo_link.to_dict(include_clicks_count=True, db=db)
+    return LinkResponse(**link_dict)
+
+@app.get("/api/links", response_model=LinkList)
+async def listar_links(
+    skip: int = 0,
+    limit: int = 100,
+    ponto_dooh: str = None,
+    campanha: str = None,
+    db: Session = Depends(get_db)
+):
+    """Lista links com filtros opcionais"""
+    query = db.query(Link)
+    
+    if ponto_dooh:
+        query = query.filter(Link.ponto_dooh == ponto_dooh)
+    if campanha:
+        query = query.filter(Link.campanha == campanha)
+    
+    total = query.count()
+    links = query.order_by(desc(Link.created_at)).offset(skip).limit(limit).all()
+    
+    links_response = [
+        LinkResponse(**link.to_dict(include_clicks_count=True, db=db))
+        for link in links
+    ]
+    
+    return LinkList(links=links_response, total=total)
+
+@app.get("/api/links/{link_id}", response_model=LinkResponse)
+async def obter_link(link_id: int, db: Session = Depends(get_db)):
+    """Obtém um link específico"""
+    link = db.query(Link).filter(Link.id == link_id).first()
+    if not link:
+        raise HTTPException(status_code=404, detail="Link não encontrado")
+    
+    link_dict = link.to_dict(include_clicks_count=True, db=db)
+    return LinkResponse(**link_dict)
+
+@app.delete("/api/links/{link_id}", status_code=204)
+async def deletar_link(link_id: int, db: Session = Depends(get_db)):
+    """Deleta um link e todos os seus cliques (cascade)"""
+    link = db.query(Link).filter(Link.id == link_id).first()
+    if not link:
+        raise HTTPException(status_code=404, detail="Link não encontrado")
+    
+    db.delete(link)
+    db.commit()
+    return Response(status_code=204)
+
+# Rastreamento
+@app.get("/r/{identifier}")
+async def rastrear_e_redirecionar(identifier: str, request: Request, db: Session = Depends(get_db)):
+    """Rastreia um clique e redireciona para a URL de destino"""
+    # Buscar link
+    link = db.query(Link).filter(Link.identifier == identifier).first()
+    if not link:
+        raise HTTPException(status_code=404, detail=f"Link com identifier '{identifier}' não encontrado")
+    
+    # Rastrear clique (não bloqueia se falhar)
+    try:
+        TrackingService.track_click(db, link.id, request)
+    except Exception as e:
+        logger.error(f"Erro ao rastrear clique para link {link.id}: {e}")
+        # Continua mesmo se tracking falhar
+    
+    # Redirecionar
+    return RedirectResponse(url=link.destination_url, status_code=302)
+
+# Analytics
+@app.get("/api/analytics", response_model=AnalyticsResponse)
+async def obter_analytics(
+    ponto_dooh: str = None,
+    campanha: str = None,
+    link_id: int = None,
+    start_date: str = None,
+    end_date: str = None,
+    db: Session = Depends(get_db)
+):
+    """Obtém métricas agregadas de analytics com filtros opcionais"""
+    metrics = AnalyticsService.get_link_analytics(
+        db, ponto_dooh, campanha, link_id, start_date, end_date
+    )
+    
+    # Converter top_links para TopLink
+    top_links = [TopLink(**link) for link in metrics["top_links"]]
+    
+    return AnalyticsResponse(
+        total_clicks=metrics["total_clicks"],
+        unique_ips=metrics["unique_ips"],
+        clicks_by_ponto=metrics["clicks_by_ponto"],
+        clicks_by_campanha=metrics["clicks_by_campanha"],
+        clicks_by_device=metrics["clicks_by_device"],
+        clicks_by_country=metrics["clicks_by_country"],
+        clicks_by_day=metrics["clicks_by_day"],
+        top_links=top_links
+    )
+
+@app.get("/api/analytics/link/{link_id}", response_model=LinkAnalytics)
+async def obter_analytics_link(link_id: int, start_date: str = None, end_date: str = None, db: Session = Depends(get_db)):
+    """Obtém métricas específicas de um link"""
+    analytics = AnalyticsService.get_link_specific_analytics(db, link_id, start_date, end_date)
+    
+    if not analytics:
+        raise HTTPException(status_code=404, detail="Link não encontrado")
+    
+    return LinkAnalytics(**analytics)
 
 if __name__ == "__main__":
     import uvicorn

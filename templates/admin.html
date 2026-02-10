@@ -9,31 +9,52 @@
 <body>
     <div class="admin-container">
         <header class="admin-header">
-            <h1>Painel Administrativo - ConteudoOH</h1>
-            <div class="header-actions">
-                <button class="btn btn-primary" onclick="atualizarNoticias()">Atualizar Notícias</button>
-                <a href="/" class="btn btn-secondary" target="_blank">Ver Tela de Exibição</a>
+            <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                <h1>📊 Painel Administrativo</h1>
+                <div class="header-actions">
+                    <button class="btn btn-primary" onclick="atualizarNoticias()">
+                        <span>🔄</span> Atualizar Notícias
+                    </button>
+                    <a href="/" class="btn btn-secondary" target="_blank">
+                        <span>👁️</span> Ver Tela de Exibição
+                    </a>
+                </div>
             </div>
         </header>
 
         <div class="admin-content">
-            <div class="stats-bar">
-                <div class="stat-card">
-                    <div class="stat-value" id="total-noticias">{{ noticias|length }}</div>
-                    <div class="stat-label">Total de Notícias</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value" id="noticias-ativas">{{ noticias_ativas|length }}</div>
-                    <div class="stat-label">Notícias Ativas</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value" id="noticias-inativas">{{ noticias_inativas|length }}</div>
-                    <div class="stat-label">Notícias Inativas</div>
-                </div>
+            <!-- Sistema de Abas -->
+            <div class="tabs-container">
+                <button class="tab-btn active" onclick="mostrarAba('noticias')">
+                    <span>📰</span> Notícias
+                </button>
+                <button class="tab-btn" onclick="mostrarAba('links')">
+                    <span>🔗</span> Links
+                </button>
+                <button class="tab-btn" onclick="mostrarAba('analytics')">
+                    <span>📊</span> Analytics
+                </button>
             </div>
 
-            <div class="noticias-list">
-                <h2>Gerenciar Notícias</h2>
+            <!-- Aba Notícias -->
+            <div id="aba-noticias" class="tab-content active">
+                <div class="stats-bar">
+                    <div class="stat-card">
+                        <div class="stat-value" id="total-noticias">{{ noticias|length }}</div>
+                        <div class="stat-label">Total de Notícias</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="noticias-ativas">{{ noticias_ativas|length }}</div>
+                        <div class="stat-label">Notícias Ativas</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="noticias-inativas">{{ noticias_inativas|length }}</div>
+                        <div class="stat-label">Notícias Inativas</div>
+                    </div>
+                </div>
+
+                <div class="noticias-list">
+                <h2>📰 Gerenciar Notícias</h2>
                 <div class="table-container">
                     <table>
                         <thead>
@@ -43,6 +64,7 @@
                                 <th>URL</th>
                                 <th>Data Publicação</th>
                                 <th>Status</th>
+                                <th>Cliques QR</th>
                                 <th>Ações</th>
                             </tr>
                         </thead>
@@ -64,6 +86,11 @@
                                         {% if noticia.ativa %}Ativa{% else %}Inativa{% endif %}
                                     </span>
                                 </td>
+                                <td>
+                                    <span class="cliques-badge" data-noticia-id="{{ noticia.id }}">
+                                        <span class="cliques-loading">⏳</span>
+                                    </span>
+                                </td>
                                 <td class="acoes-cell">
                                     <button class="btn-icon toggle-btn" onclick="toggleNoticia({{ noticia.id }})" 
                                             title="{% if noticia.ativa %}Desativar{% else %}Ativar{% endif %}">
@@ -79,6 +106,145 @@
                     </table>
                 </div>
             </div>
+            </div>
+
+            <!-- Aba Links -->
+            <div id="aba-links" class="tab-content">
+                <div class="links-section">
+                    <h2>🔗 Gerenciar Links Rastreáveis</h2>
+                    
+                    <!-- Formulário de criação -->
+                    <div class="form-container">
+                        <h3>➕ Criar Novo Link</h3>
+                        <form id="form-criar-link" onsubmit="criarLink(event)">
+                            <div class="form-group">
+                                <label for="link-identifier">Identificador (único):</label>
+                                <input type="text" id="link-identifier" required maxlength="100" 
+                                       placeholder="ex: promo-verao-2024">
+                            </div>
+                            <div class="form-group">
+                                <label for="link-destination-url">URL de Destino:</label>
+                                <input type="url" id="link-destination-url" required 
+                                       placeholder="https://exemplo.com.br">
+                            </div>
+                            <div class="form-group">
+                                <label for="link-ponto-dooh">Ponto DOOH:</label>
+                                <input type="text" id="link-ponto-dooh" required maxlength="200" 
+                                       placeholder="ex: Shopping Center">
+                            </div>
+                            <div class="form-group">
+                                <label for="link-campanha">Campanha:</label>
+                                <input type="text" id="link-campanha" required maxlength="200" 
+                                       placeholder="ex: Promoção de Verão 2024">
+                            </div>
+                            <button type="submit" class="btn btn-primary">Criar Link</button>
+                        </form>
+                    </div>
+
+                    <!-- Lista de links -->
+                    <div class="links-list">
+                        <h3>📋 Links Existentes</h3>
+                        <div class="filters-bar">
+                            <input type="text" id="filter-ponto-dooh" placeholder="Filtrar por Ponto DOOH" 
+                                   onkeyup="filtrarLinks()">
+                            <input type="text" id="filter-campanha" placeholder="Filtrar por Campanha" 
+                                   onkeyup="filtrarLinks()">
+                            <button class="btn btn-secondary" onclick="carregarLinks()">Atualizar</button>
+                        </div>
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Identificador</th>
+                                        <th>URL Destino</th>
+                                        <th>Ponto DOOH</th>
+                                        <th>Campanha</th>
+                                        <th>Cliques</th>
+                                        <th>Criado em</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="links-tbody">
+                                    <!-- Preenchido via JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Aba Analytics -->
+            <div id="aba-analytics" class="tab-content">
+                <div class="analytics-section">
+                    <h2>📊 Dashboard de Analytics</h2>
+                    
+                    <!-- Filtros -->
+                    <div class="filters-bar">
+                        <input type="date" id="filter-start-date" onchange="carregarAnalytics()">
+                        <input type="date" id="filter-end-date" onchange="carregarAnalytics()">
+                        <input type="text" id="filter-analytics-ponto" placeholder="Ponto DOOH" 
+                               onkeyup="carregarAnalytics()">
+                        <input type="text" id="filter-analytics-campanha" placeholder="Campanha" 
+                               onkeyup="carregarAnalytics()">
+                        <button class="btn btn-secondary" onclick="carregarAnalytics()">Atualizar</button>
+                    </div>
+
+                    <!-- Cards de métricas -->
+                    <div class="stats-bar">
+                        <div class="stat-card">
+                            <div class="stat-value" id="metric-total-clicks">0</div>
+                            <div class="stat-label">Total de Cliques</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="metric-unique-ips">0</div>
+                            <div class="stat-label">IPs Únicos</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="metric-clicks-hoje">0</div>
+                            <div class="stat-label">Cliques Hoje</div>
+                        </div>
+                    </div>
+
+                    <!-- Gráficos -->
+                    <div class="charts-container">
+                        <div class="chart-card">
+                            <h3>Cliques por Dia</h3>
+                            <canvas id="chart-clicks-by-day"></canvas>
+                        </div>
+                        <div class="chart-card">
+                            <h3>Cliques por Dispositivo</h3>
+                            <canvas id="chart-clicks-by-device"></canvas>
+                        </div>
+                        <div class="chart-card">
+                            <h3>Cliques por País</h3>
+                            <canvas id="chart-clicks-by-country"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Top Links -->
+                    <div class="top-links-section">
+                        <h3>🏆 Top 10 Links</h3>
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Posição</th>
+                                        <th>Identificador</th>
+                                        <th>Ponto DOOH</th>
+                                        <th>Campanha</th>
+                                        <th>Total Cliques</th>
+                                        <th>IPs Únicos</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="top-links-tbody">
+                                    <!-- Preenchido via JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -87,6 +253,8 @@
         <p>Processando...</p>
     </div>
 
+    <!-- Chart.js para gráficos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="/static/admin.js"></script>
 </body>
 </html>
