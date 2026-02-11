@@ -13,7 +13,7 @@ function isDia(hora) {
     return hora >= 6 && hora < 18;
 }
 
-// Função para obter caminho da imagem PNG baseado no código do clima e horário
+// Função para obter caminho da imagem PNG baseado no código do clima (Tomorrow.io) e horário
 function obterIconeClima(codigoClima, horaAtual) {
     // Tratar valores null, undefined ou inválidos
     if (codigoClima === null || codigoClima === undefined || isNaN(codigoClima)) {
@@ -29,74 +29,45 @@ function obterIconeClima(codigoClima, horaAtual) {
     // Determinar o ícone baseado no código e horário
     let nomeArquivo;
     
-    switch (codigo) {
-        case 0: // Céu limpo
-            nomeArquivo = dia ? 'tempo_limpo_dia.png' : 'tempo_limpo_noite.png';
-            break;
-            
-        case 1: // Principalmente limpo
-        case 2: // Parcialmente nublado
-            nomeArquivo = dia ? 'parcialmente ensolarado_dia.png' : 'parcialmente_nubaldo_noite.png';
-            break;
-            
-        case 3: // Nublado
-            nomeArquivo = 'nublado.png';
-            break;
-            
-        case 45: // Nevoeiro
-        case 48: // Nevoeiro com geada
-            nomeArquivo = 'ceu_encoberto.png';
-            break;
-            
-        case 51: // Garoa leve
-        case 53: // Garoa moderada
-        case 55: // Garoa densa
-        case 56: // Garoa congelante leve
-        case 57: // Garoa congelante densa
-            // Durante o dia: chuva com sol, durante a noite: chuva leve
-            nomeArquivo = dia ? 'chuva_ensolarada.png' : 'chuva_leve.png';
-            break;
-            
-        case 61: // Chuva leve
-            // Durante o dia: chuva com sol, durante a noite: chuva leve
-            nomeArquivo = dia ? 'chuva_ensolarada.png' : 'chuva_leve.png';
-            break;
-            
-        case 63: // Chuva moderada
-        case 65: // Chuva forte
-        case 66: // Chuva congelante leve
-        case 67: // Chuva congelante forte
-            nomeArquivo = 'chuva_moderada.png';
-            break;
-            
-        case 71: // Queda de neve leve (fallback)
-        case 73: // Queda de neve moderada (fallback)
-        case 75: // Queda de neve forte (fallback)
-        case 77: // Grãos de neve (fallback)
-            nomeArquivo = 'chuva_moderada.png';
-            break;
-            
-        case 80: // Pancadas de chuva leve
-        case 81: // Pancadas de chuva moderada
-        case 82: // Pancadas de chuva forte
-            // Durante o dia: chuva com sol, durante a noite: chuva moderada
-            nomeArquivo = dia ? 'chuva_ensolarada.png' : 'chuva_moderada.png';
-            break;
-            
-        case 85: // Pancadas de neve leve (fallback)
-        case 86: // Pancadas de neve forte (fallback)
-            nomeArquivo = 'chuva_moderada.png';
-            break;
-            
-        case 95: // Trovoada
-        case 96: // Trovoada com granizo leve
-        case 99: // Trovoada com granizo forte
-            nomeArquivo = 'tempestade.png';
-            break;
-            
-        default:
-            console.warn('Código de clima não mapeado:', codigo);
-            nomeArquivo = dia ? 'parcialmente ensolarado_dia.png' : 'parcialmente_nubaldo_noite.png';
+    // Códigos Tomorrow.io (principais):
+    // 1000 Clear, 1100 Mostly Clear, 1101 Partly Cloudy, 1102 Mostly Cloudy, 1001 Cloudy
+    // 2000 Fog, 2100 Light Fog
+    // 4000 Drizzle, 4001 Rain, 4200 Light Rain, 4201 Heavy Rain
+    // 5000 Snow, 5001 Flurries, 5100 Light Snow, 5101 Heavy Snow
+    // 6000 Freezing Drizzle, 6001 Freezing Rain, 6200 Light Freezing Rain, 6201 Heavy Freezing Rain
+    // 7000 Ice Pellets, 7101 Heavy Ice Pellets, 7102 Light Ice Pellets
+    // 8000 Thunderstorm
+    if (codigo === 1000) {
+        // Céu limpo
+        nomeArquivo = dia ? 'tempo_limpo_dia.png' : 'tempo_limpo_noite.png';
+    } else if (codigo === 1100 || codigo === 1101 || codigo === 1102 || codigo === 1001) {
+        // Céu parcialmente nublado / predominantemente nublado / encoberto
+        // Estratégia visual: sempre mostrar sol entre nuvens, mais "otimista" para DOOH
+        nomeArquivo = dia ? 'parcialmente ensolarado_dia.png' : 'parcialmente_nubaldo_noite.png';
+    } else if (codigo === 2000 || codigo === 2100) {
+        // Nevoeiro
+        nomeArquivo = 'ceu_encoberto.png';
+    } else if (codigo === 4000 || codigo === 4001 || codigo === 4200) {
+        // Garoa / Chuva leve
+        nomeArquivo = dia ? 'chuva_ensolarada.png' : 'chuva_leve.png';
+    } else if (codigo === 4201 || codigo === 6001 || codigo === 6201) {
+        // Chuva forte / chuva congelante forte
+        nomeArquivo = 'chuva_moderada.png';
+    } else if (codigo === 5000 || codigo === 5001 || codigo === 5100 || codigo === 5101) {
+        // Neve
+        nomeArquivo = 'chuva_moderada.png'; // fallback visual
+    } else if (codigo === 6000 || codigo === 6200) {
+        // Precipitação congelante leve
+        nomeArquivo = 'chuva_moderada.png';
+    } else if (codigo === 7000 || codigo === 7101 || codigo === 7102) {
+        // Granizo / gelo
+        nomeArquivo = 'tempestade.png';
+    } else if (codigo === 8000) {
+        // Tempestade com trovoada
+        nomeArquivo = 'tempestade.png';
+    } else {
+        console.warn('Código de clima não mapeado (Tomorrow.io):', codigo);
+        nomeArquivo = dia ? 'parcialmente ensolarado_dia.png' : 'parcialmente_nubaldo_noite.png';
     }
     
     // Codificar espaços e caracteres especiais na URL
@@ -196,9 +167,9 @@ function exibirClima(dados) {
         // Tentar obter código do clima
         let codigo = atual.codigo_clima;
         
-        // Se não houver código, usar fallback
+        // Se não houver código, usar fallback (Tomorrow.io: parcialmente nublado)
         if (codigo === null || codigo === undefined || isNaN(codigo)) {
-            codigo = 2; // Fallback para parcialmente nublado
+            codigo = 1101; // Partly Cloudy
         }
         
         // Obter hora atual para determinar se é dia ou noite
@@ -266,7 +237,7 @@ function preencherPrevisao3Dias(previsoes) {
                 // Tentar obter código do clima de várias fontes
                 let codigo = previsao.codigo_clima;
                 if (codigo === null || codigo === undefined) {
-                    codigo = 2; // Fallback para parcialmente nublado
+                    codigo = 1101; // Fallback para parcialmente nublado (Tomorrow.io)
                 }
                 
                 // Para previsão, considerar como dia (horário típico de exibição)
@@ -307,7 +278,7 @@ function preencherPrevisao3Dias(previsoes) {
             if (iconeElement) {
                 // Para previsão sem dados, usar hora atual para determinar dia/noite
                 const horaAtual = new Date().getHours();
-                const caminhoIcone = obterIconeClima(2, horaAtual); // Código padrão: parcialmente nublado
+                const caminhoIcone = obterIconeClima(1101, horaAtual); // Código padrão: parcialmente nublado (Tomorrow.io)
                 
                 // Verificar se já existe uma imagem, se não, criar
                 let imgEl = iconeElement.querySelector('img');

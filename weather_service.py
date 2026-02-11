@@ -1,7 +1,9 @@
 """
-Serviço para consumir a API Open-Meteo
-Documentação: https://open-meteo.com/en/docs
+Serviço para consumir API de clima externa
+Fonte principal e única: Tomorrow.io (v4 Weather Forecast API)
+Documentação: https://docs.tomorrow.io/reference/weather-forecast
 """
+import os
 import requests
 from typing import Dict, Optional, Tuple
 from datetime import datetime, timedelta
@@ -10,8 +12,12 @@ import hashlib
 
 logger = logging.getLogger(__name__)
 
-# URL base da API Open-Meteo (gratuita, sem necessidade de API key)
-API_BASE_URL = "https://api.open-meteo.com/v1/forecast"
+# URL base da API Tomorrow.io (requer API key)
+API_BASE_URL = "https://api.tomorrow.io/v4/weather/forecast"
+
+# Chave padrão integrada ao sistema (pode ser sobrescrita por variável de ambiente TOMORROW_API_KEY)
+DEFAULT_TOMORROW_API_KEY = "2w5HZQWL2HsVJOqVN1NYpwAf93mI8Ei9"
+TOMORROW_API_KEY = os.getenv("TOMORROW_API_KEY", DEFAULT_TOMORROW_API_KEY)
 
 # URL base da API de Geocoding (Nominatim / OpenStreetMap)
 GEO_API_URL = "https://nominatim.openstreetmap.org/search"
@@ -30,7 +36,7 @@ TTL_CLIMA = timedelta(minutes=10)  # Clima atualiza a cada 10 minutos
 
 
 class WeatherService:
-    """Serviço para obter dados meteorológicos da API Open-Meteo"""
+    """Serviço para obter dados meteorológicos da API Tomorrow.io"""
     
     def __init__(self, latitude: float = DEFAULT_LATITUDE, longitude: float = DEFAULT_LONGITUDE):
         """
@@ -57,59 +63,103 @@ class WeatherService:
         """
         # Criar chave de cache baseada em lat/lon (arredondado para evitar duplicatas)
         cache_key = f"{round(self.latitude, 4)}_{round(self.longitude, 4)}"
-        
-        # Verificar cache
-        if cache_key in _cache_clima:
-            cached_data, cached_time = _cache_clima[cache_key]
-            if datetime.now() - cached_time < TTL_CLIMA:
+
+        # Verificar cache (com fallback mesmo se estiver "vencido")
+        cached_entry = _cache_clima.get(cache_key)
+        if cached_entry:
+            cached_data, cached_time = cached_entry
+            idade_cache = datetime.now() - cached_time
+
+            if idade_cache < TTL_CLIMA:
+                # Cache fresco: usar diretamente
                 logger.info(f"Retornando dados de clima do cache para {nome_cidade}")
-                # Atualizar nome da cidade no cache antes de retornar
                 if "localizacao" in cached_data:
                     cached_data["localizacao"]["nome"] = nome_cidade
                 return cached_data
             else:
-                # Cache expirado, remover
-                del _cache_clima[cache_key]
+                # Cache expirado, mas mantido como fallback em caso de erro na API
+                logger.info(
+                    f"Cache de clima expirado para {nome_cidade} (idade: {idade_cache}). "
+                    "Tentando atualizar dados na API, mantendo cache como fallback."
+                )
         
+        # Verificar API key
+        if not TOMORROW_API_KEY:
+            logger.error("TOMORROW_API_KEY não configurada. Defina a variável de ambiente com sua chave da Tomorrow.io.")
+            return None
+
         try:
-            # Parâmetros da API Open-Meteo
+            # Parâmetros mínimos da API Tomorrow.io
+            # Referência: https://docs.tomorrow.io/reference/weather-forecast
+            # Usamos apenas parâmetros que sabemos ser suportados para evitar erros 400.
             params = {
-                "latitude": self.latitude,
-                "longitude": self.longitude,
-                "current": "temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m,wind_direction_10m",
-                "hourly": "temperature_2m,weather_code,precipitation_probability",
-                "daily": "weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,wind_speed_10m_max",
-                "timezone": "America/Sao_Paulo",
-                "forecast_days": 7,  # Previsão para 7 dias
-                "temperature_unit": "celsius",
-                "wind_speed_unit": "kmh",
-                "precipitation_unit": "mm"
+                "location": f"{self.latitude},{self.longitude}",
+                "apikey": TOMORROW_API_KEY,
+                # Garante unidades métricas (°C, km/h, mm)
+                "units": "metric",
             }
-            
+
             response = requests.get(API_BASE_URL, params=params, timeout=self.timeout)
             response.raise_for_status()
-            
+
             data = response.json()
-            
-            # Processar e estruturar os dados
+
+            # Processar e estruturar os dados vindos da Tomorrow.io
             resultado = self._processar_dados(data, nome_cidade)
             
-            # Salvar no cache
+            # Salvar/atualizar no cache com timestamp atual
             _cache_clima[cache_key] = (resultado, datetime.now())
             logger.info(f"Dados de clima salvos no cache para {nome_cidade}")
             
             return resultado
             
         except requests.exceptions.RequestException as e:
-            logger.error(f"Erro ao buscar dados meteorológicos: {e}")
+            logger.error(f"Erro ao buscar dados meteorológicos na API: {e}")
+
+            # Se tivermos cache (mesmo expirado), usar como fallback para não "apagar" o clima da tela
+            cached_entry = _cache_clima.get(cache_key)
+            if cached_entry:
+                cached_data, cached_time = cached_entry
+                logger.warning(
+                    "Retornando dados meteorológicos a partir de cache expirado devido a erro na API."
+                )
+                # Marcar que os dados podem estar desatualizados
+                try:
+                    if "atual" in cached_data:
+                        cached_data["atual"]["dados_desatualizados"] = True
+                        cached_data["atual"]["origem_cache"] = True
+                except Exception:
+                    # Não bloquear retorno por falha ao marcar flags
+                    pass
+                if "localizacao" in cached_data:
+                    cached_data["localizacao"]["nome"] = nome_cidade
+                return cached_data
+
             return None
         except Exception as e:
             logger.error(f"Erro inesperado ao processar dados meteorológicos: {e}")
+            # Mesmo tratamento de fallback em erro genérico
+            cached_entry = _cache_clima.get(cache_key)
+            if cached_entry:
+                cached_data, cached_time = cached_entry
+                logger.warning(
+                    "Retornando dados meteorológicos a partir de cache expirado devido a erro inesperado."
+                )
+                try:
+                    if "atual" in cached_data:
+                        cached_data["atual"]["dados_desatualizados"] = True
+                        cached_data["atual"]["origem_cache"] = True
+                except Exception:
+                    pass
+                if "localizacao" in cached_data:
+                    cached_data["localizacao"]["nome"] = nome_cidade
+                return cached_data
+
             return None
     
     def _processar_dados(self, data: Dict, nome_cidade: str = "Cajazeiras - PB") -> Dict:
         """
-        Processa os dados brutos da API em um formato mais útil
+        Processa os dados brutos da API Tomorrow.io em um formato mais útil
         
         Args:
             data: Dados brutos da API
@@ -117,64 +167,90 @@ class WeatherService:
         Returns:
             Dict processado com informações meteorológicas
         """
-        current = data.get("current", {})
-        hourly = data.get("hourly", {})
-        daily = data.get("daily", {})
-        
+        timelines = data.get("timelines", {}) or {}
+
+        # Cada timeline é uma lista de pontos { time, values }
+        current_timeline = timelines.get("current") or []
+        hourly_timeline = (
+            timelines.get("hourly")
+            or timelines.get("1h")
+            or []
+        )
+        daily_timeline = (
+            timelines.get("daily")
+            or timelines.get("1d")
+            or []
+        )
+
         # Dados atuais
+        current_values = {}
+        if current_timeline:
+            # Pega o primeiro registro de "current"
+            current_values = current_timeline[0].get("values", {}) or {}
+        elif hourly_timeline:
+            # Fallback: usa o primeiro ponto horário como "atual"
+            current_values = hourly_timeline[0].get("values", {}) or {}
+
+        codigo_atual = current_values.get("weatherCode")
+
         clima_atual = {
-            "temperatura": current.get("temperature_2m"),
-            "umidade": current.get("relative_humidity_2m"),
-            "codigo_clima": current.get("weather_code"),
-            "velocidade_vento": current.get("wind_speed_10m"),
-            "direcao_vento": current.get("wind_direction_10m"),
-            "descricao_clima": self._traduzir_codigo_clima(current.get("weather_code")),
-            "icone_clima": self._obter_icone_clima(current.get("weather_code")),
+            "temperatura": current_values.get("temperature"),
+            "umidade": current_values.get("humidity"),
+            "codigo_clima": codigo_atual,
+            "velocidade_vento": current_values.get("windSpeed"),
+            "direcao_vento": current_values.get("windDirection"),
+            "descricao_clima": self._traduzir_codigo_clima(codigo_atual),
+            "icone_clima": self._obter_icone_clima(codigo_atual),
             "data_atualizacao": datetime.now().strftime("%d/%m/%Y %H:%M")
         }
-        
+
         # Previsão horária (próximas 24 horas)
         previsao_horaria = []
-        if hourly.get("time") and hourly.get("temperature_2m"):
-            horas = hourly.get("time", [])[:24]  # Próximas 24 horas
-            temperaturas = hourly.get("temperature_2m", [])[:24]
-            codigos = hourly.get("weather_code", [])[:24]
-            precipitacao = hourly.get("precipitation_probability", [])[:24]
-            
-            for i, hora in enumerate(horas):
-                if i < len(temperaturas):
-                    previsao_horaria.append({
-                        "hora": self._formatar_hora(hora),
-                        "temperatura": temperaturas[i],
-                        "codigo_clima": codigos[i] if i < len(codigos) else None,
-                        "precipitacao_prob": precipitacao[i] if i < len(precipitacao) else None,
-                        "icone": self._obter_icone_clima(codigos[i] if i < len(codigos) else None)
-                    })
-        
-        # Previsão diária (próximos 7 dias)
+        for ponto in hourly_timeline[:24]:
+            hora_iso = ponto.get("time")
+            valores = ponto.get("values", {}) or {}
+            codigo = valores.get("weatherCode")
+            previsao_horaria.append({
+                "hora": self._formatar_hora(hora_iso) if hora_iso else "",
+                "temperatura": valores.get("temperature"),
+                "codigo_clima": codigo,
+                "precipitacao_prob": valores.get("precipitationProbability"),
+                "icone": self._obter_icone_clima(codigo)
+            })
+
+        # Previsão diária (próximos dias)
         previsao_diaria = []
-        if daily.get("time") and daily.get("temperature_2m_max"):
-            dias = daily.get("time", [])
-            temp_max = daily.get("temperature_2m_max", [])
-            temp_min = daily.get("temperature_2m_min", [])
-            codigos = daily.get("weather_code", [])
-            precipitacao = daily.get("precipitation_sum", [])
-            vento = daily.get("wind_speed_10m_max", [])
-            
-            for i, dia in enumerate(dias):
-                if i < len(temp_max):
-                    previsao_diaria.append({
-                        "dia": self._formatar_dia(dia),
-                        "dia_semana": self._obter_dia_semana(dia),
-                        "temp_max": temp_max[i],
-                        "temp_min": temp_min[i],
-                        "codigo_clima": codigos[i] if i < len(codigos) else None,
-                        "precipitacao": precipitacao[i] if i < len(precipitacao) else None,
-                        "vento_max": vento[i] if i < len(vento) else None,
-                        "descricao": self._traduzir_codigo_clima(codigos[i] if i < len(codigos) else None),
-                        "icone": self._obter_icone_clima(codigos[i] if i < len(codigos) else None)
-                    })
-        
+        for ponto in daily_timeline:
+            dia_iso = ponto.get("time")
+            valores = ponto.get("values", {}) or {}
+            codigo = (
+                valores.get("weatherCode")
+                or valores.get("weatherCodeMax")
+            )
+
+            temp_max = (
+                valores.get("temperatureMax")
+                if valores.get("temperatureMax") is not None
+                else valores.get("temperature")
+            )
+            temp_min = (
+                valores.get("temperatureMin")
+                if valores.get("temperatureMin") is not None
+                else valores.get("temperature")
+            )
+
+            previsao_diaria.append({
+                "dia": self._formatar_dia(dia_iso) if dia_iso else "",
+                "dia_semana": self._obter_dia_semana(dia_iso) if dia_iso else "",
+                "temp_max": temp_max,
+                "temp_min": temp_min,
+                "codigo_clima": codigo,
+                "precipitacao": valores.get("precipitationAccumulation"),
+                "vento_max": valores.get("windSpeedMax") or valores.get("windSpeed"),
+                "descricao": self._traduzir_codigo_clima(codigo),
+                "icone": self._obter_icone_clima(codigo)
+            })
+
         return {
             "atual": clima_atual,
             "previsao_horaria": previsao_horaria,
@@ -277,85 +353,91 @@ class WeatherService:
     
     def _traduzir_codigo_clima(self, codigo: Optional[int]) -> str:
         """
-        Traduz o código WMO Weather Interpretation Codes para descrição em português
+        Traduz o código de clima da Tomorrow.io para descrição em português.
         
-        Args:
-            codigo: Código do clima da API
-            
-        Returns:
-            Descrição do clima em português
+        Referência (Tomorrow.io weatherCode):
+        1000: Clear, 1100: Mostly Clear, 1101: Partly Cloudy, 1102: Mostly Cloudy, 1001: Cloudy,
+        2000: Fog, 2100: Light Fog,
+        4000: Drizzle, 4001: Rain, 4200: Light Rain, 4201: Heavy Rain,
+        5000: Snow, 5001: Flurries, 5100: Light Snow, 5101: Heavy Snow,
+        6000: Freezing Drizzle, 6001: Freezing Rain, 6200: Light Freezing Rain, 6201: Heavy Freezing Rain,
+        7000: Ice Pellets, 7101: Heavy Ice Pellets, 7102: Light Ice Pellets,
+        8000: Thunderstorm
         """
         if codigo is None:
             return "Dados indisponíveis"
-        
-        # Códigos WMO Weather Interpretation Codes
-        codigos = {
-            0: "Céu limpo",
-            1: "Principalmente limpo",
-            2: "Parcialmente nublado",
-            3: "Nublado",
-            45: "Nevoeiro",
-            48: "Nevoeiro com geada",
-            51: "Garoa leve",
-            53: "Garoa moderada",
-            55: "Garoa densa",
-            56: "Garoa congelante leve",
-            57: "Garoa congelante densa",
-            61: "Chuva leve",
-            63: "Chuva moderada",
-            65: "Chuva forte",
-            66: "Chuva congelante leve",
-            67: "Chuva congelante forte",
-            71: "Queda de neve leve",
-            73: "Queda de neve moderada",
-            75: "Queda de neve forte",
-            77: "Grãos de neve",
-            80: "Pancadas de chuva leve",
-            81: "Pancadas de chuva moderada",
-            82: "Pancadas de chuva forte",
-            85: "Pancadas de neve leve",
-            86: "Pancadas de neve forte",
-            95: "Trovoada",
-            96: "Trovoada com granizo leve",
-            99: "Trovoada com granizo forte"
+
+        # Estratégia "suavizada" para DOOH:
+        # - 1000: céu limpo
+        # - 1100, 1101, 1102, 1001: tratamos como "Parcialmente nublado"
+        #   para ficar mais próximo da percepção visual/Google Clima.
+        codigos_tomorrow = {
+            1000: "Céu limpo",
+            1100: "Parcialmente nublado",
+            1101: "Parcialmente nublado",
+            1102: "Parcialmente nublado",
+            1001: "Parcialmente nublado",
+
+            2000: "Nevoeiro",
+            2100: "Nevoeiro leve",
+
+            4000: "Garoa",
+            4001: "Chuva",
+            4200: "Chuva leve",
+            4201: "Chuva forte",
+
+            5000: "Neve",
+            5001: "Flocos de neve esparsos",
+            5100: "Neve leve",
+            5101: "Neve forte",
+
+            6000: "Garoa congelante",
+            6001: "Chuva congelante",
+            6200: "Chuva congelante leve",
+            6201: "Chuva congelante forte",
+
+            7000: "Granizo/neve granular",
+            7101: "Granizo intenso",
+            7102: "Granizo leve",
+
+            8000: "Tempestade com trovoadas",
         }
-        
-        return codigos.get(codigo, "Condições desconhecidas")
+
+        return codigos_tomorrow.get(int(codigo), "Condições desconhecidas")
     
     def _obter_icone_clima(self, codigo: Optional[int]) -> str:
         """
-        Retorna o emoji/ícone correspondente ao código do clima
-        
-        Args:
-            codigo: Código do clima
-            
-        Returns:
-            Emoji representando o clima
+        Retorna um emoji correspondente ao código de clima da Tomorrow.io.
         """
         if codigo is None:
             return "❓"
-        
-        # Mapeamento simplificado de códigos para emojis
-        if codigo == 0:
+
+        try:
+            codigo_int = int(codigo)
+        except (TypeError, ValueError):
+            return "❓"
+
+        # Simplificação: agrupa condições em categorias visuais
+        if codigo_int == 1000:
             return "☀️"  # Céu limpo
-        elif codigo in [1, 2]:
+        elif codigo_int in (1100, 1101):
             return "🌤️"  # Parcialmente nublado
-        elif codigo == 3:
-            return "☁️"  # Nublado
-        elif codigo in [45, 48]:
+        elif codigo_int in (1102, 1001):
+            return "☁️"  # Nublado/encoberto
+        elif codigo_int in (2000, 2100):
             return "🌫️"  # Nevoeiro
-        elif codigo in [51, 53, 55, 56, 57]:
-            return "🌦️"  # Garoa
-        elif codigo in [61, 63, 65, 66, 67]:
-            return "🌧️"  # Chuva
-        elif codigo in [71, 73, 75, 77]:
+        elif codigo_int in (4000, 4001, 4200):
+            return "🌦️"  # Garoa / chuva leve
+        elif codigo_int in (4201, 6001, 6201):
+            return "🌧️"  # Chuva forte
+        elif codigo_int in (5000, 5001, 5100, 5101):
             return "❄️"  # Neve
-        elif codigo in [80, 81, 82]:
-            return "⛈️"  # Pancadas de chuva
-        elif codigo in [85, 86]:
-            return "🌨️"  # Pancadas de neve
-        elif codigo in [95, 96, 99]:
-            return "⛈️"  # Trovoada
+        elif codigo_int in (6000, 6200):
+            return "🌨️"  # Precipitação congelante leve
+        elif codigo_int in (7000, 7101, 7102):
+            return "🌨️"  # Granizo / gelo
+        elif codigo_int == 8000:
+            return "⛈️"  # Tempestade
         else:
             return "🌤️"
     
