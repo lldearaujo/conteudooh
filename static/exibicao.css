@@ -59,11 +59,11 @@ body {
     isolation: isolate;
 }
 
-.noticia-display {
-    width: 100%;
-    height: 70%;
-    max-width: 100%;
-    max-height: 70%;
+    .noticia-display {
+        width: 100%;
+        height: 65%;
+        max-width: 100%;
+        max-height: 65%;
     display: flex;
     flex-direction: row;
     animation: fadeInContent 0.6s ease-out;
@@ -332,22 +332,22 @@ body {
 
 .footer-content-bottom {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
     justify-content: center;
-    gap: clamp(2px, 0.5vh, 5px);
+    gap: clamp(8px, 1vh, 16px);
     width: 100%;
     max-width: 100%;
     height: 100%;
     max-height: 100%;
     flex-wrap: nowrap;
     position: relative;
-    overflow: hidden;
+    overflow: visible;
     box-sizing: border-box;
 }
 
-/* Em telas pequenas, usar layout horizontal para evitar QR code ocupar todo espaço */
-@media (max-width: 768px) {
+/* Em telas bem pequenas, usar layout horizontal para evitar QR code ocupar todo espaço */
+@media (max-width: 600px) {
     .footer-content-bottom {
         flex-direction: row !important;
         align-items: center !important;
@@ -372,17 +372,17 @@ body {
 
 .footer-left-group {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
     justify-content: center;
-    gap: clamp(1px, 0.3vh, 3px);
+    gap: clamp(8px, 1vh, 16px);
     max-width: 100%;
-    overflow: hidden;
+    overflow: visible;
 }
 
 /* Footer integrado - estilos */
 .footer-texto {
-    font-size: clamp(9.6px, 1.44vw + 0.6vh, 16.8px);
+    font-size: clamp(9.6px, 1.44vw + 0.6vh, 24px);
     font-weight: 600;
     color: rgba(255, 255, 255, 0.85);
     text-shadow: 1px 1px 2px rgba(0, 0, 0, 1);
@@ -390,7 +390,7 @@ body {
     margin: 0;
     line-height: 1.4;
     white-space: nowrap;
-    letter-spacing: 0.2px;
+    letter-spacing: 0.3px;
     order: 1;
     flex-shrink: 0;
     overflow: hidden;
@@ -408,24 +408,31 @@ body {
     border-radius: 0;
     flex-shrink: 0;
     order: 2;
-    max-width: 100%;
-    overflow: hidden;
+    max-width: none;
+    overflow: visible;
 }
 
 .qrcode-image {
-    width: clamp(48px, 9.6vw + 2.4vh, 114px);
-    height: clamp(48px, 9.6vw + 2.4vh, 114px);
-    max-width: 100%;
-    max-height: 100%;
+    width: clamp(64px, 9.6vw + 2.4vh, 180px);
+    height: clamp(64px, 9.6vw + 2.4vh, 180px);
+    /* max-width e max-height removidos - serão definidos apenas nas media queries específicas */
     background: white;
-    padding: clamp(2.4px, 0.48vh, 6px);
+    padding: clamp(2.4px, 0.48vh, 8px);
     image-rendering: -webkit-optimize-contrast;
     image-rendering: crisp-edges;
     display: block;
-    border-radius: clamp(4.8px, 0.96vw, 8.4px);
+    border-radius: clamp(4.8px, 0.96vw, 10px);
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
     object-fit: contain;
     flex-shrink: 0;
+}
+
+/* Para telas bem pequenas, aplicar max-width/max-height apenas nelas */
+@media (max-width: 600px) {
+    .qrcode-image {
+        max-width: 100%;
+        max-height: 100%;
+    }
 }
 
 .qrcode-image[src=""],
@@ -434,9 +441,9 @@ body {
 }
 
 .footer-logo {
-    height: clamp(21.6px, 3.6vw + 1.8vh, 50.4px);
+    height: clamp(28px, 3.6vw + 1.8vh, 80px);
     width: auto;
-    max-width: clamp(120px, 24vw + 3.6vh, 288px);
+    max-width: clamp(120px, 24vw + 3.6vh, 380px);
     max-height: 100%;
     object-fit: contain;
     filter: drop-shadow(1px 1px 2px rgba(0, 0, 0, 0.5));
@@ -462,12 +469,7 @@ body {
 }
 
 /* Estilos compartilhados para footer */
-.footer-content-bottom .footer-texto,
-.footer-content-bottom .footer-logo,
-.footer-content-bottom .qrcode-container,
-.footer-content-bottom .qrcode-image {
-    /* Herda estilos do footer integrado */
-}
+/* Herda estilos do footer integrado - regras aplicadas diretamente nos seletores */
 
 
 /* ============================================
@@ -515,8 +517,8 @@ body {
    RESPONSIVIDADE - Proporções mantidas
    ============================================ */
 
-/* Telas pequenas - Layout vertical */
-@media (max-width: 768px) {
+/* Telas bem pequenas - Layout vertical */
+@media (max-width: 600px) {
     .noticia-fullscreen {
         flex-direction: column;
         padding: 0;
@@ -1396,6 +1398,473 @@ body {
     .qrcode-image {
         width: clamp(48px, 8.4vw + 1.8vh, 96px);
         height: clamp(48px, 8.4vw + 1.8vh, 96px);
+    }
+}
+
+/* ============================================
+   Telas HD e Full HD (desktop)
+   Aumenta proporcionalmente logo, texto e QR
+   sem afetar telas pequenas
+   ============================================ */
+@media (min-width: 1280px) and (min-height: 720px) {
+    .noticia-display {
+        height: 68% !important;
+        max-height: 68% !important;
+    }
+
+    .footer-fixed-bottom {
+        height: 32% !important;
+        max-height: 32% !important;
+        padding-top: 1.5vh !important;
+        padding-bottom: 1.5vh !important;
+        padding-left: 2vw !important;
+        padding-right: 2vw !important;
+        overflow: visible !important;
+        box-sizing: border-box !important;
+    }
+
+    .footer-content-bottom {
+        flex-direction: row !important;
+        gap: clamp(20px, 2.5vw, 40px) !important;
+        flex-shrink: 0 !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        height: auto !important;
+        min-height: fit-content !important;
+        overflow: visible !important;
+        flex-wrap: wrap !important;
+        padding: 0.5vh 1vw !important;
+        box-sizing: border-box !important;
+    }
+
+    .footer-left-group {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: clamp(10px, 1.2vw, 20px) !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        width: auto !important;
+        max-width: calc(50% - 20px) !important;
+        flex-shrink: 1 !important;
+        flex-basis: auto !important;
+    }
+
+    .footer-texto {
+        font-size: clamp(18px, 1.3vw, 26px) !important;
+        font-weight: 600 !important;
+        letter-spacing: 0.3px !important;
+        flex-shrink: 0 !important;
+        min-width: fit-content !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        line-height: 1.2 !important;
+        white-space: nowrap !important;
+    }
+
+    .footer-logo {
+        height: clamp(45px, 3.5vw, 70px) !important;
+        max-width: clamp(220px, 20vw, 340px) !important;
+        flex-shrink: 1 !important;
+        min-width: fit-content !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    .qrcode-container {
+        flex-shrink: 0 !important;
+        min-width: fit-content !important;
+        max-width: calc(50% - 20px) !important;
+        width: auto !important;
+        height: auto !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: visible !important;
+        flex-basis: auto !important;
+    }
+
+    .qrcode-image {
+        width: clamp(120px, 9vw, 200px) !important;
+        height: clamp(120px, 9vw, 200px) !important;
+        max-width: clamp(120px, 9vw, 200px) !important;
+        max-height: clamp(120px, 9vw, 200px) !important;
+        min-width: clamp(120px, 9vw, 200px) !important;
+        min-height: clamp(120px, 9vw, 200px) !important;
+        padding: clamp(5px, 0.7vw, 10px) !important;
+        border-radius: clamp(5px, 0.5vw, 10px) !important;
+        flex-shrink: 0 !important;
+        box-sizing: content-box !important;
+        margin: 0 !important;
+        overflow: visible !important;
+        object-fit: contain !important;
+    }
+}
+
+/* Telas Full HD+ (painéis grandes ou 4K reduzido) */
+@media (min-width: 1920px) and (min-height: 1080px) {
+    .noticia-display {
+        height: 68% !important;
+        max-height: 68% !important;
+    }
+
+    .footer-fixed-bottom {
+        height: 32% !important;
+        max-height: 32% !important;
+        padding-top: 1.8vh !important;
+        padding-bottom: 1.8vh !important;
+        padding-left: 2.5vw !important;
+        padding-right: 2.5vw !important;
+        overflow: visible !important;
+    }
+
+    .footer-content-bottom {
+        flex-direction: row !important;
+        gap: clamp(20px, 2.5vw, 40px) !important;
+        flex-shrink: 0 !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        height: auto !important;
+        min-height: fit-content !important;
+        overflow: visible !important;
+        flex-wrap: nowrap !important;
+        padding: 0 !important;
+    }
+
+    .footer-left-group {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: clamp(14px, 1.8vw, 28px) !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        width: auto !important;
+        max-width: none !important;
+        flex-shrink: 0 !important;
+    }
+
+    .footer-texto {
+        font-size: clamp(24px, 1.6vw, 36px) !important;
+        font-weight: 600 !important;
+        letter-spacing: 0.5px !important;
+        flex-shrink: 0 !important;
+        min-width: fit-content !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        line-height: 1.2 !important;
+        white-space: nowrap !important;
+    }
+
+    .footer-logo {
+        height: clamp(60px, 4.5vw, 95px) !important;
+        max-width: clamp(300px, 24vw, 450px) !important;
+        flex-shrink: 0 !important;
+        min-width: fit-content !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    .footer-content-bottom {
+        flex-wrap: wrap !important;
+        padding: 0.6vh 1.2vw !important;
+        box-sizing: border-box !important;
+    }
+
+    .footer-left-group {
+        max-width: calc(50% - 24px) !important;
+        flex-shrink: 1 !important;
+        flex-basis: auto !important;
+    }
+
+    .footer-texto {
+        font-size: clamp(22px, 1.5vw, 32px) !important;
+    }
+
+    .footer-logo {
+        height: clamp(55px, 4vw, 85px) !important;
+        max-width: clamp(270px, 22vw, 400px) !important;
+        flex-shrink: 1 !important;
+    }
+
+    .qrcode-container {
+        flex-shrink: 0 !important;
+        min-width: fit-content !important;
+        max-width: calc(50% - 24px) !important;
+        width: auto !important;
+        height: auto !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: visible !important;
+        flex-basis: auto !important;
+    }
+
+    .qrcode-image {
+        width: clamp(150px, 8.5vw, 260px) !important;
+        height: clamp(150px, 8.5vw, 260px) !important;
+        max-width: clamp(150px, 8.5vw, 260px) !important;
+        max-height: clamp(150px, 8.5vw, 260px) !important;
+        min-width: clamp(150px, 8.5vw, 260px) !important;
+        min-height: clamp(150px, 8.5vw, 260px) !important;
+        padding: clamp(7px, 0.9vw, 14px) !important;
+        border-radius: clamp(7px, 0.6vw, 12px) !important;
+        flex-shrink: 0 !important;
+        box-sizing: content-box !important;
+        margin: 0 !important;
+        overflow: visible !important;
+        object-fit: contain !important;
+    }
+}
+
+/* Telas HD Verticais (Portrait) - Aumentar itens do QR code */
+@media (min-width: 1280px) and (min-height: 720px) and (orientation: portrait) {
+    .footer-fixed-bottom {
+        height: 35% !important;
+        max-height: 35% !important;
+        padding-top: 2vh !important;
+        padding-bottom: 2vh !important;
+        padding-left: 2vw !important;
+        padding-right: 2vw !important;
+        overflow: visible !important;
+    }
+
+    .footer-content-bottom {
+        flex-direction: row !important;
+        gap: clamp(20px, 2.5vw, 40px) !important;
+        flex-shrink: 0 !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+
+    .footer-left-group {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: clamp(14px, 1.8vw, 28px) !important;
+        flex-shrink: 0 !important;
+    }
+
+    .footer-texto {
+        font-size: clamp(24px, 2vh, 36px) !important;
+        font-weight: 600 !important;
+        white-space: nowrap !important;
+    }
+
+    .footer-logo {
+        height: clamp(65px, 5vh, 100px) !important;
+        max-width: clamp(320px, 28vw, 480px) !important;
+    }
+
+    .qrcode-container {
+        overflow: visible !important;
+    }
+
+    .qrcode-image {
+        width: clamp(180px, 12vh, 300px) !important;
+        height: clamp(180px, 12vh, 300px) !important;
+        max-width: clamp(180px, 12vh, 300px) !important;
+        max-height: clamp(180px, 12vh, 300px) !important;
+        min-width: clamp(180px, 12vh, 300px) !important;
+        min-height: clamp(180px, 12vh, 300px) !important;
+        padding: clamp(10px, 1.2vh, 18px) !important;
+        overflow: visible !important;
+        object-fit: contain !important;
+    }
+}
+
+/* Telas Full HD Verticais (Portrait) - Aumentar itens do QR code */
+@media (min-width: 1920px) and (min-height: 1080px) and (orientation: portrait) {
+    .footer-fixed-bottom {
+        height: 35% !important;
+        max-height: 35% !important;
+        padding-top: 2.5vh !important;
+        padding-bottom: 2.5vh !important;
+        padding-left: 2.5vw !important;
+        padding-right: 2.5vw !important;
+        overflow: visible !important;
+    }
+
+    .footer-content-bottom {
+        flex-direction: row !important;
+        gap: clamp(24px, 3vw, 48px) !important;
+        flex-shrink: 0 !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+
+    .footer-left-group {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: clamp(16px, 2vw, 32px) !important;
+        flex-shrink: 0 !important;
+    }
+
+    .footer-texto {
+        font-size: clamp(28px, 2.2vh, 42px) !important;
+        font-weight: 600 !important;
+        white-space: nowrap !important;
+    }
+
+    .footer-logo {
+        height: clamp(75px, 5.5vh, 115px) !important;
+        max-width: clamp(380px, 30vw, 550px) !important;
+    }
+
+    .qrcode-container {
+        overflow: visible !important;
+    }
+
+    .qrcode-image {
+        width: clamp(220px, 13vh, 360px) !important;
+        height: clamp(220px, 13vh, 360px) !important;
+        max-width: clamp(220px, 13vh, 360px) !important;
+        max-height: clamp(220px, 13vh, 360px) !important;
+        min-width: clamp(220px, 13vh, 360px) !important;
+        min-height: clamp(220px, 13vh, 360px) !important;
+        padding: clamp(12px, 1.5vh, 22px) !important;
+        overflow: visible !important;
+        object-fit: contain !important;
+    }
+}
+
+/* Telas com 720px de largura - Aumentar itens do QR code */
+@media (width: 720px) {
+    .footer-fixed-bottom {
+        height: 35% !important;
+        max-height: 35% !important;
+        padding-top: 2vh !important;
+        padding-bottom: 2vh !important;
+        padding-left: 2vw !important;
+        padding-right: 2vw !important;
+        overflow: visible !important;
+    }
+
+    .footer-content-bottom {
+        flex-direction: row !important;
+        gap: clamp(20px, 2.5vw, 40px) !important;
+        flex-shrink: 0 !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+
+    .footer-left-group {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: clamp(14px, 1.8vw, 28px) !important;
+        flex-shrink: 0 !important;
+    }
+
+    .footer-texto {
+        font-size: clamp(24px, 2vh, 36px) !important;
+        font-weight: 600 !important;
+        white-space: nowrap !important;
+    }
+
+    .footer-logo {
+        height: clamp(65px, 5vh, 100px) !important;
+        max-width: clamp(320px, 28vw, 480px) !important;
+    }
+
+    .qrcode-container {
+        overflow: visible !important;
+    }
+
+    .qrcode-image {
+        width: clamp(180px, 12vh, 300px) !important;
+        height: clamp(180px, 12vh, 300px) !important;
+        max-width: clamp(180px, 12vh, 300px) !important;
+        max-height: clamp(180px, 12vh, 300px) !important;
+        min-width: clamp(180px, 12vh, 300px) !important;
+        min-height: clamp(180px, 12vh, 300px) !important;
+        padding: clamp(10px, 1.2vh, 18px) !important;
+        overflow: visible !important;
+        object-fit: contain !important;
+    }
+}
+
+/* Telas com 1080px de largura - Aumentar itens do QR code */
+@media (width: 1080px) {
+    .footer-fixed-bottom {
+        height: 35% !important;
+        max-height: 35% !important;
+        padding-top: 2.5vh !important;
+        padding-bottom: 2.5vh !important;
+        padding-left: 2.5vw !important;
+        padding-right: 2.5vw !important;
+        overflow: visible !important;
+    }
+
+    .footer-content-bottom {
+        flex-direction: row !important;
+        gap: clamp(24px, 3vw, 48px) !important;
+        flex-shrink: 0 !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+
+    .footer-left-group {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: clamp(16px, 2vw, 32px) !important;
+        flex-shrink: 0 !important;
+    }
+
+    .footer-texto {
+        font-size: clamp(28px, 2.2vh, 42px) !important;
+        font-weight: 600 !important;
+        white-space: nowrap !important;
+    }
+
+    .footer-logo {
+        height: clamp(75px, 5.5vh, 115px) !important;
+        max-width: clamp(380px, 30vw, 550px) !important;
+    }
+
+    .qrcode-container {
+        overflow: visible !important;
+    }
+
+    .qrcode-image {
+        width: clamp(220px, 13vh, 360px) !important;
+        height: clamp(220px, 13vh, 360px) !important;
+        max-width: clamp(220px, 13vh, 360px) !important;
+        max-height: clamp(220px, 13vh, 360px) !important;
+        min-width: clamp(220px, 13vh, 360px) !important;
+        min-height: clamp(220px, 13vh, 360px) !important;
+        padding: clamp(12px, 1.5vh, 22px) !important;
+        overflow: visible !important;
+        object-fit: contain !important;
+    }
+}
+
+/* Telas verticais (altura maior que largura) - QR code na linha de baixo */
+@media (orientation: portrait) and (min-width: 600px) {
+    .footer-content-bottom {
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: clamp(12px, 1.5vh, 20px) !important;
+    }
+
+    .footer-left-group {
+        justify-content: center !important;
+        margin-bottom: clamp(8px, 1vh, 16px) !important;
+        max-width: 100% !important;
+    }
+
+    .qrcode-container {
+        margin-top: clamp(4px, 0.8vh, 10px) !important;
     }
 }
 

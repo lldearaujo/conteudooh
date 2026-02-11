@@ -10,14 +10,16 @@ import qrcode
 import io
 import logging
 from datetime import datetime, timedelta
+from timezone_utils import agora_brasil
+from urllib.parse import urlencode, urlparse, urlunparse, parse_qs
 
 # Configurar logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 from database import engine, get_db, Base
-from models import Noticia, Link, Click
-from schemas import LinkCreate, LinkResponse, LinkList, AnalyticsResponse, LinkAnalytics, TopLink
+from models import Noticia, Link, Click, ConversionEvent
+from schemas import LinkCreate, LinkResponse, LinkList, AnalyticsResponse, LinkAnalytics, TopLink, ConversionEventCreate, ConversionEventResponse, ConversionMetrics
 from tracking_service import TrackingService
 from analytics_service import AnalyticsService
 from scraper import RadiocentroScraper
@@ -75,7 +77,7 @@ async def obter_noticia_aleatoria(db: Session = Depends(get_db)):
     """
     import random
     limite_dias = 2
-    limite_data = datetime.utcnow() - timedelta(days=limite_dias)
+    limite_data = agora_brasil() - timedelta(days=limite_dias)
 
     # Notícias com data_publicacao recente
     noticias = (
@@ -122,7 +124,7 @@ async def listar_noticias(db: Session = Depends(get_db), ativa: bool = None):
     - Se quiser todas, use o parâmetro ?ativa=true/false explicitamente
     """
     limite_dias = 2
-    limite_data = datetime.utcnow() - timedelta(days=limite_dias)
+    limite_data = agora_brasil() - timedelta(days=limite_dias)
 
     query = db.query(Noticia)
     if ativa is not None:
@@ -242,18 +244,28 @@ async def gerar_qrcode_noticia(noticia_id: int, request: Request, db: Session = 
         
         # Criar ou buscar link rastreável para esta notícia
         identifier = f"noticia-{noticia_id}"
+        qr_code_id = f"qr-noticias-{noticia_id}"
         link = db.query(Link).filter(Link.identifier == identifier).first()
+        
+        # Truncar título se necessário para campanha (máx 200 chars)
+        # Definir campanha antes do if/else para uso em ambos os blocos
+        campanha = noticia.titulo[:200] if noticia.titulo and len(noticia.titulo) > 200 else (noticia.titulo or "Notícia")
         
         if not link:
             # Criar novo link rastreável
-            # Truncar título se necessário para campanha (máx 200 chars)
-            campanha = noticia.titulo[:200] if noticia.titulo and len(noticia.titulo) > 200 else (noticia.titulo or "Notícia")
             
+            # Auto-gerar UTMs para notícias
             link = Link(
                 identifier=identifier,
                 destination_url=url,
                 ponto_dooh="Notícias",
-                campanha=campanha
+                campanha=campanha,
+                qr_code_id=qr_code_id,
+                tipo_midia="DOOH",  # Padrão para notícias
+                utm_source="dooh",
+                utm_medium="digital",
+                utm_campaign=campanha[:200] if len(campanha) > 200 else campanha,
+                utm_content=qr_code_id
             )
             db.add(link)
             db.commit()
@@ -265,6 +277,21 @@ async def gerar_qrcode_noticia(noticia_id: int, request: Request, db: Session = 
                 link.destination_url = url
                 db.commit()
                 print(f"[QR Code] Link rastreável atualizado: {identifier}")
+            
+            # Garantir que tem qr_code_id e UTMs (para links antigos)
+            if not link.qr_code_id:
+                link.qr_code_id = qr_code_id
+            if not link.utm_source:
+                link.utm_source = "dooh"
+            if not link.utm_medium:
+                link.utm_medium = "digital"
+            if not link.utm_campaign:
+                link.utm_campaign = campanha[:200] if len(campanha) > 200 else campanha
+            if not link.utm_content:
+                link.utm_content = qr_code_id
+            if not link.tipo_midia:
+                link.tipo_midia = "DOOH"
+            db.commit()
         
         # Gerar URL do link rastreável
         base_url = str(request.base_url).rstrip('/')
@@ -385,12 +412,27 @@ async def criar_link(link_data: LinkCreate, db: Session = Depends(get_db)):
     if link_existente:
         raise HTTPException(status_code=400, detail=f"Link com identifier '{link_data.identifier}' já existe")
     
+    # Auto-gerar UTMs se não fornecidos
+    utm_source = link_data.utm_source or "ooh"
+    utm_medium = link_data.utm_medium or link_data.tipo_midia or "outdoor"
+    utm_campaign = link_data.utm_campaign or link_data.campanha
+    utm_content = link_data.utm_content or link_data.qr_code_id or link_data.peca_criativa
+    
     # Criar novo link
     novo_link = Link(
         identifier=link_data.identifier,
         destination_url=str(link_data.destination_url),
         ponto_dooh=link_data.ponto_dooh,
-        campanha=link_data.campanha
+        campanha=link_data.campanha,
+        qr_code_id=link_data.qr_code_id,
+        peca_criativa=link_data.peca_criativa,
+        local_especifico=link_data.local_especifico,
+        tipo_midia=link_data.tipo_midia,
+        utm_source=utm_source,
+        utm_medium=utm_medium,
+        utm_campaign=utm_campaign,
+        utm_content=utm_content,
+        utm_term=link_data.utm_term
     )
     
     db.add(novo_link)
@@ -451,21 +493,122 @@ async def deletar_link(link_id: int, db: Session = Depends(get_db)):
 # Rastreamento
 @app.get("/r/{identifier}")
 async def rastrear_e_redirecionar(identifier: str, request: Request, db: Session = Depends(get_db)):
-    """Rastreia um clique e redireciona para a URL de destino"""
+    """Rastreia um clique e redireciona para a URL de destino com UTMs"""
     # Buscar link
     link = db.query(Link).filter(Link.identifier == identifier).first()
     if not link:
         raise HTTPException(status_code=404, detail=f"Link com identifier '{identifier}' não encontrado")
     
     # Rastrear clique (não bloqueia se falhar)
+    click_id = None
     try:
-        TrackingService.track_click(db, link.id, request)
+        click = TrackingService.track_click(db, link.id, request)
+        if click:
+            click_id = click.id
     except Exception as e:
         logger.error(f"Erro ao rastrear clique para link {link.id}: {e}")
         # Continua mesmo se tracking falhar
     
+    # Construir URL de destino com UTMs
+    destination_url = link.destination_url
+    
+    # Se o link tem UTMs configurados, adicionar à URL
+    utm_params = {}
+    if link.utm_source:
+        utm_params["utm_source"] = link.utm_source
+    if link.utm_medium:
+        utm_params["utm_medium"] = link.utm_medium
+    if link.utm_campaign:
+        utm_params["utm_campaign"] = link.utm_campaign
+    if link.utm_content:
+        utm_params["utm_content"] = link.utm_content
+    if link.utm_term:
+        utm_params["utm_term"] = link.utm_term
+    
+    if utm_params:
+        # Parse da URL para adicionar query params
+        parsed = urlparse(destination_url)
+        existing_params = parse_qs(parsed.query)
+        
+        # Adicionar UTMs (não sobrescrever se já existirem)
+        for key, value in utm_params.items():
+            if key not in existing_params:
+                existing_params[key] = [value]
+        
+        # Reconstruir URL com novos params
+        new_query = urlencode(existing_params, doseq=True)
+        destination_url = urlunparse((
+            parsed.scheme,
+            parsed.netloc,
+            parsed.path,
+            parsed.params,
+            new_query,
+            parsed.fragment
+        ))
+    
+    # Adicionar click_id à URL para tracking pós-scan
+    if click_id:
+        parsed = urlparse(destination_url)
+        existing_params = parse_qs(parsed.query)
+        if 'click_id' not in existing_params:
+            existing_params['click_id'] = [str(click_id)]
+            new_query = urlencode(existing_params, doseq=True)
+            destination_url = urlunparse((
+                parsed.scheme,
+                parsed.netloc,
+                parsed.path,
+                parsed.params,
+                new_query,
+                parsed.fragment
+            ))
+    
     # Redirecionar
-    return RedirectResponse(url=link.destination_url, status_code=302)
+    return RedirectResponse(url=destination_url, status_code=302)
+
+# Tracking de Eventos de Conversão
+@app.post("/api/tracking/event", response_model=ConversionEventResponse, status_code=201)
+async def registrar_evento_conversao(event_data: ConversionEventCreate, db: Session = Depends(get_db)):
+    """
+    Registra um evento de conversão/comportamento pós-scan
+    
+    Tipos de eventos suportados:
+    - pageview: Visualização de página
+    - scroll: Scroll depth (25%, 50%, 75%, 100%)
+    - cta_click: Clique em CTA
+    - whatsapp: Conversão via WhatsApp
+    - form: Preenchimento de formulário
+    - download: Download de arquivo
+    - call: Chamada telefônica
+    - purchase: Compra/Conversão final
+    """
+    # Verificar se o click existe
+    click = db.query(Click).filter(Click.id == event_data.click_id).first()
+    if not click:
+        raise HTTPException(status_code=404, detail=f"Click com ID {event_data.click_id} não encontrado")
+    
+    # Validar tipo de evento
+    tipos_validos = ["pageview", "scroll", "cta_click", "whatsapp", "form", "download", "call", "purchase"]
+    if event_data.event_type not in tipos_validos:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Tipo de evento inválido. Tipos válidos: {', '.join(tipos_validos)}"
+        )
+    
+    # Criar evento
+    evento = ConversionEvent(
+        click_id=event_data.click_id,
+        event_type=event_data.event_type,
+        event_value=event_data.event_value,
+        occurred_at=agora_brasil()
+    )
+    
+    db.add(evento)
+    db.commit()
+    db.refresh(evento)
+    
+    logger.info(f"Evento de conversão registrado: click_id={event_data.click_id}, type={event_data.event_type}")
+    
+    return ConversionEventResponse(**evento.to_dict())
 
 # Analytics
 @app.get("/api/analytics", response_model=AnalyticsResponse)
@@ -505,6 +648,19 @@ async def obter_analytics_link(link_id: int, start_date: str = None, end_date: s
         raise HTTPException(status_code=404, detail="Link não encontrado")
     
     return LinkAnalytics(**analytics)
+
+
+@app.get("/api/analytics/conversions", response_model=ConversionMetrics)
+async def obter_metricas_conversao(
+    link_id: int = None,
+    click_id: int = None,
+    start_date: str = None,
+    end_date: str = None,
+    db: Session = Depends(get_db)
+):
+    """Obtém métricas de conversão/comportamento pós-scan"""
+    metrics = AnalyticsService.get_conversion_metrics(db, link_id, click_id, start_date, end_date)
+    return ConversionMetrics(**metrics)
 
 if __name__ == "__main__":
     import uvicorn

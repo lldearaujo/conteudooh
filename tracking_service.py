@@ -5,6 +5,7 @@ Extrai dados do visitante e cria registros de clique
 from fastapi import Request
 from sqlalchemy.orm import Session
 from user_agents import parse as parse_user_agent
+from timezone_utils import agora_brasil
 import requests
 import logging
 
@@ -103,11 +104,14 @@ class TrackingService:
         Retorna:
         - country: Nome do país ou None
         - city: Nome da cidade ou None
+        - state: Estado/Região ou None
+        - isp: Provedor de internet ou None
+        - timezone: Timezone do usuário ou None
         
-        Se falhar, retorna {"country": None, "city": None}
+        Se falhar, retorna dict com valores None
         """
         if not ip or ip == "unknown" or ip.startswith("127.") or ip.startswith("192.168.") or ip.startswith("10."):
-            return {"country": None, "city": None}
+            return {"country": None, "city": None, "state": None, "isp": None, "timezone": None}
         
         try:
             # Usar serviço gratuito ipapi.co
@@ -119,19 +123,50 @@ class TrackingService:
                 data = response.json()
                 country = data.get("country_name")
                 city = data.get("city")
+                state = data.get("region")  # Estado/Região
+                isp = data.get("org")  # Provedor de internet
+                timezone = data.get("timezone")  # Timezone
+                
                 return {
                     "country": country if country else None,
-                    "city": city if city else None
+                    "city": city if city else None,
+                    "state": state if state else None,
+                    "isp": isp if isp else None,
+                    "timezone": timezone if timezone else None
                 }
             else:
                 logger.warning(f"GeoIP retornou status {response.status_code} para IP {ip}")
-                return {"country": None, "city": None}
+                return {"country": None, "city": None, "state": None, "isp": None, "timezone": None}
         except requests.exceptions.Timeout:
             logger.warning(f"Timeout ao buscar GeoIP para IP {ip}")
-            return {"country": None, "city": None}
+            return {"country": None, "city": None, "state": None, "isp": None, "timezone": None}
         except Exception as e:
             logger.warning(f"Erro ao buscar GeoIP para IP {ip}: {e}")
-            return {"country": None, "city": None}
+            return {"country": None, "city": None, "state": None, "isp": None, "timezone": None}
+    
+    @staticmethod
+    def get_language(request: Request) -> str:
+        """
+        Extrai o idioma principal do header Accept-Language
+        
+        Retorna:
+        - Idioma principal (ex: "pt-BR", "en-US") ou "unknown"
+        """
+        accept_language = request.headers.get("Accept-Language", "")
+        if not accept_language:
+            return "unknown"
+        
+        try:
+            # Accept-Language pode ser: "pt-BR,pt;q=0.9,en-US;q=0.8"
+            # Pegar o primeiro idioma (mais preferido)
+            first_lang = accept_language.split(",")[0].strip()
+            # Remover quality values (q=0.9)
+            if ";" in first_lang:
+                first_lang = first_lang.split(";")[0].strip()
+            return first_lang if first_lang else "unknown"
+        except Exception as e:
+            logger.warning(f"Erro ao extrair idioma: {e}")
+            return "unknown"
     
     @staticmethod
     def track_click(db: Session, link_id: int, request: Request):
@@ -158,7 +193,10 @@ class TrackingService:
         # Buscar geolocalização (não bloqueia se falhar)
         location_data = TrackingService.get_location_info(ip_address)
         
-        # Criar registro de clique
+        # Extrair idioma do dispositivo
+        language = TrackingService.get_language(request)
+        
+        # Criar registro de clique (com timezone UTC-03:00)
         click = Click(
             link_id=link_id,
             ip_address=ip_address if ip_address != "unknown" else None,
@@ -168,13 +206,18 @@ class TrackingService:
             browser=ua_data["browser"],
             operating_system=ua_data["operating_system"],
             country=location_data["country"],
-            city=location_data["city"]
+            city=location_data["city"],
+            state=location_data["state"],
+            isp=location_data["isp"],
+            timezone=location_data["timezone"],
+            language=language if language != "unknown" else None,
+            clicked_at=agora_brasil()  # Garantir timezone correto
         )
         
         db.add(click)
         db.commit()
         db.refresh(click)
         
-        logger.info(f"Clique rastreado: link_id={link_id}, ip={ip_address}, device={ua_data['device_type']}")
+        logger.info(f"Clique rastreado: link_id={link_id}, ip={ip_address}, device={ua_data['device_type']}, click_id={click.id}")
         
         return click

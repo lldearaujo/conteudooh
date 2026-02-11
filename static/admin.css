@@ -679,6 +679,37 @@ code {
     max-height: 300px;
 }
 
+.chart-wrapper {
+    background: var(--bg-primary);
+    padding: 1.5rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
+    transition: var(--transition);
+    position: relative;
+    height: 400px;
+    display: flex;
+    flex-direction: column;
+}
+
+.chart-wrapper:hover {
+    box-shadow: var(--shadow-md);
+}
+
+.chart-wrapper h4 {
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+    font-size: 1.125rem;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.chart-wrapper canvas {
+    flex: 1;
+    max-height: 320px;
+    min-height: 0;
+}
+
 .top-links-section {
     margin-top: 2rem;
 }

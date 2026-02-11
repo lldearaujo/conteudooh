@@ -139,26 +139,52 @@ function exibirNoticia(noticia) {
             const larguraTela = window.innerWidth || document.documentElement.clientWidth || screen.width;
             const alturaTela = window.innerHeight || document.documentElement.clientHeight || screen.height;
             
-            // Limitar tamanho máximo baseado na resolução da tela
-            let maxSize = 70;
-            if (larguraTela <= 256 && alturaTela <= 384) {
-                maxSize = 56; // Para 256x384px
-            } else if (larguraTela <= 480) {
-                maxSize = 65; // Para telas pequenas
-            } else if (larguraTela <= 768) {
-                maxSize = 85; // Para telas médias
-            }
+            console.log('Dimensões da tela:', larguraTela, 'x', alturaTela);
             
-            this.style.maxWidth = maxSize + 'px';
-            this.style.maxHeight = maxSize + 'px';
-            this.style.width = 'auto';
-            this.style.height = 'auto';
+            // Verificar se é tela grande (HD/Full HD) - deixar CSS controlar
+            const isHD = (larguraTela >= 1280 && alturaTela >= 720) || (larguraTela >= 1920 && alturaTela >= 1080);
             
-            if (qrcodeContainer) {
-                qrcodeContainer.style.display = 'flex';
-                qrcodeContainer.style.visibility = 'visible';
-                qrcodeContainer.style.flexShrink = '0';
-                qrcodeContainer.style.maxWidth = maxSize + 'px';
+            console.log('É tela HD/Full HD?', isHD);
+            
+            if (isHD) {
+                // Em telas HD/Full HD, remover TODOS os limites e deixar CSS fazer o trabalho
+                console.log('Removendo limites do JavaScript - deixando CSS controlar');
+                this.style.maxWidth = '';
+                this.style.maxHeight = '';
+                this.style.width = '';
+                this.style.height = '';
+                this.style.minWidth = '';
+                this.style.minHeight = '';
+                
+                if (qrcodeContainer) {
+                    qrcodeContainer.style.display = 'flex';
+                    qrcodeContainer.style.visibility = 'visible';
+                    qrcodeContainer.style.flexShrink = '0';
+                    qrcodeContainer.style.maxWidth = '';
+                    qrcodeContainer.style.minWidth = '';
+                }
+            } else {
+                // Limitar tamanho máximo apenas para telas pequenas/médias
+                let maxSize = 70;
+                if (larguraTela <= 256 && alturaTela <= 384) {
+                    maxSize = 56; // Para 256x384px
+                } else if (larguraTela <= 480) {
+                    maxSize = 65; // Para telas pequenas
+                } else if (larguraTela <= 768) {
+                    maxSize = 85; // Para telas médias
+                }
+                
+                this.style.maxWidth = maxSize + 'px';
+                this.style.maxHeight = maxSize + 'px';
+                this.style.width = 'auto';
+                this.style.height = 'auto';
+                
+                if (qrcodeContainer) {
+                    qrcodeContainer.style.display = 'flex';
+                    qrcodeContainer.style.visibility = 'visible';
+                    qrcodeContainer.style.flexShrink = '0';
+                    qrcodeContainer.style.maxWidth = maxSize + 'px';
+                }
             }
         };
         

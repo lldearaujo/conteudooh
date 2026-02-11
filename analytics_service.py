@@ -5,7 +5,8 @@ from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func, and_, or_
 from datetime import datetime, timedelta
 from typing import Optional, Dict, List
-from models import Link, Click
+from models import Link, Click, ConversionEvent
+from timezone_utils import agora_brasil, converter_para_brasil
 import logging
 
 logger = logging.getLogger(__name__)
@@ -107,7 +108,9 @@ class AnalyticsService:
             
             # Por dia
             if click.clicked_at:
-                day_str = click.clicked_at.strftime("%Y-%m-%d")
+                # Converter para timezone do Brasil se necessário
+                dt_brasil = converter_para_brasil(click.clicked_at) if click.clicked_at.tzinfo else click.clicked_at
+                day_str = dt_brasil.strftime("%Y-%m-%d")
                 clicks_by_day[day_str] = clicks_by_day.get(day_str, 0) + 1
         
         # Top 10 links
@@ -257,7 +260,9 @@ class AnalyticsService:
             clicks_by_country[country] = clicks_by_country.get(country, 0) + 1
             
             if click.clicked_at:
-                day_str = click.clicked_at.strftime("%Y-%m-%d")
+                # Converter para timezone do Brasil se necessário
+                dt_brasil = converter_para_brasil(click.clicked_at) if click.clicked_at.tzinfo else click.clicked_at
+                day_str = dt_brasil.strftime("%Y-%m-%d")
                 clicks_by_day[day_str] = clicks_by_day.get(day_str, 0) + 1
         
         return {
@@ -271,4 +276,137 @@ class AnalyticsService:
             "clicks_by_device": clicks_by_device,
             "clicks_by_country": clicks_by_country,
             "clicks_by_day": clicks_by_day
+        }
+    
+    @staticmethod
+    def get_conversion_metrics(
+        db: Session,
+        link_id: Optional[int] = None,
+        click_id: Optional[int] = None,
+        start_date: Optional[str] = None,
+        end_date: Optional[str] = None
+    ) -> dict:
+        """
+        Calcula métricas de conversão/comportamento pós-scan
+        
+        Retorna:
+        - total_events: Total de eventos registrados
+        - events_by_type: Dict {event_type: count}
+        - average_time_on_page: Tempo médio de permanência (segundos)
+        - scroll_depth_stats: Dict com percentuais de scroll atingidos
+        - conversion_rate: Taxa de conversão (eventos de conversão / total de cliques)
+        - conversions_by_type: Dict {conversion_type: count}
+        """
+        # Query base para eventos
+        query = db.query(ConversionEvent)
+        
+        # Aplicar filtros
+        if click_id:
+            query = query.filter(ConversionEvent.click_id == click_id)
+        
+        if link_id:
+            # Filtrar por link_id através do click
+            query = query.join(Click).filter(Click.link_id == link_id)
+        
+        if start_date:
+            try:
+                start_dt = datetime.fromisoformat(start_date)
+                query = query.filter(ConversionEvent.occurred_at >= start_dt)
+            except ValueError:
+                pass
+        
+        if end_date:
+            try:
+                end_dt = datetime.fromisoformat(end_date)
+                end_dt = end_dt.replace(hour=23, minute=59, second=59)
+                query = query.filter(ConversionEvent.occurred_at <= end_dt)
+            except ValueError:
+                pass
+        
+        events = query.all()
+        
+        # Calcular métricas
+        total_events = len(events)
+        
+        # Eventos por tipo
+        events_by_type = {}
+        scroll_depths = []
+        time_on_page_values = []
+        conversion_types = ["whatsapp", "form", "download", "call", "purchase"]
+        conversions_by_type = {}
+        
+        for event in events:
+            # Contar por tipo
+            event_type = event.event_type
+            events_by_type[event_type] = events_by_type.get(event_type, 0) + 1
+            
+            # Extrair dados de scroll
+            if event_type == "scroll" and event.event_value:
+                try:
+                    import json
+                    event_data = json.loads(event.event_value)
+                    if "depth" in event_data:
+                        scroll_depths.append(event_data["depth"])
+                except:
+                    pass
+            
+            # Extrair tempo de permanência
+            if event_type == "pageview" and event.event_value:
+                try:
+                    import json
+                    event_data = json.loads(event.event_value)
+                    if "time_on_page" in event_data:
+                        time_on_page_values.append(event_data["time_on_page"])
+                except:
+                    pass
+            
+            # Contar conversões
+            if event_type in conversion_types:
+                conversions_by_type[event_type] = conversions_by_type.get(event_type, 0) + 1
+        
+        # Calcular tempo médio de permanência
+        average_time_on_page = sum(time_on_page_values) / len(time_on_page_values) if time_on_page_values else 0
+        
+        # Estatísticas de scroll depth
+        scroll_depth_stats = {
+            "25": scroll_depths.count(25),
+            "50": scroll_depths.count(50),
+            "75": scroll_depths.count(75),
+            "100": scroll_depths.count(100)
+        }
+        
+        # Calcular taxa de conversão
+        total_conversions = sum(conversions_by_type.values())
+        
+        # Obter total de cliques para calcular taxa
+        clicks_query = db.query(Click)
+        if link_id:
+            clicks_query = clicks_query.filter(Click.link_id == link_id)
+        if click_id:
+            clicks_query = clicks_query.filter(Click.id == click_id)
+        if start_date:
+            try:
+                start_dt = datetime.fromisoformat(start_date)
+                clicks_query = clicks_query.filter(Click.clicked_at >= start_dt)
+            except ValueError:
+                pass
+        if end_date:
+            try:
+                end_dt = datetime.fromisoformat(end_date)
+                end_dt = end_dt.replace(hour=23, minute=59, second=59)
+                clicks_query = clicks_query.filter(Click.clicked_at <= end_dt)
+            except ValueError:
+                pass
+        
+        total_clicks = clicks_query.count()
+        conversion_rate = (total_conversions / total_clicks * 100) if total_clicks > 0 else 0
+        
+        return {
+            "total_events": total_events,
+            "events_by_type": events_by_type,
+            "average_time_on_page": round(average_time_on_page, 2),
+            "scroll_depth_stats": scroll_depth_stats,
+            "conversion_rate": round(conversion_rate, 2),
+            "total_conversions": total_conversions,
+            "conversions_by_type": conversions_by_type
         }

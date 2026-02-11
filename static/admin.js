@@ -178,19 +178,43 @@ async function criarLink(event) {
     const ponto_dooh = document.getElementById('link-ponto-dooh').value.trim();
     const campanha = document.getElementById('link-campanha').value.trim();
     
+    // Novos campos opcionais
+    const qr_code_id = document.getElementById('link-qr-code-id').value.trim() || null;
+    const tipo_midia = document.getElementById('link-tipo-midia').value.trim() || null;
+    const local_especifico = document.getElementById('link-local-especifico').value.trim() || null;
+    const peca_criativa = document.getElementById('link-peca-criativa').value.trim() || null;
+    const utm_source = document.getElementById('link-utm-source').value.trim() || null;
+    const utm_medium = document.getElementById('link-utm-medium').value.trim() || null;
+    const utm_campaign = document.getElementById('link-utm-campaign').value.trim() || null;
+    const utm_content = document.getElementById('link-utm-content').value.trim() || null;
+    const utm_term = document.getElementById('link-utm-term').value.trim() || null;
+    
     mostrarLoading();
     try {
+        const body = {
+            identifier,
+            destination_url,
+            ponto_dooh,
+            campanha
+        };
+        
+        // Adicionar campos opcionais apenas se preenchidos
+        if (qr_code_id) body.qr_code_id = qr_code_id;
+        if (tipo_midia) body.tipo_midia = tipo_midia;
+        if (local_especifico) body.local_especifico = local_especifico;
+        if (peca_criativa) body.peca_criativa = peca_criativa;
+        if (utm_source) body.utm_source = utm_source;
+        if (utm_medium) body.utm_medium = utm_medium;
+        if (utm_campaign) body.utm_campaign = utm_campaign;
+        if (utm_content) body.utm_content = utm_content;
+        if (utm_term) body.utm_term = utm_term;
+        
         const response = await fetch('/api/links', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({
-                identifier,
-                destination_url,
-                ponto_dooh,
-                campanha
-            })
+            body: JSON.stringify(body)
         });
         
         if (!response.ok) {
@@ -238,7 +262,41 @@ function renderizarLinks(links) {
     }
     
     tbody.innerHTML = links.map(link => {
-        const createdDate = link.created_at ? new Date(link.created_at).toLocaleDateString('pt-BR') : 'N/A';
+        // Formatar data - backend já envia apenas a data (YYYY-MM-DD) no timezone correto
+        let createdDate = 'N/A';
+        if (link.created_at) {
+            try {
+                // Backend envia apenas a data no formato YYYY-MM-DD (sem hora/timezone)
+                // Extrair e formatar diretamente para evitar conversões de timezone
+                let dateStr = link.created_at;
+                
+                // Se contém 'T' ou timezone, pegar apenas a parte da data
+                if (dateStr.includes('T')) {
+                    dateStr = dateStr.split('T')[0];
+                }
+                // Remover timezone offset se existir
+                if (dateStr.includes('+')) {
+                    dateStr = dateStr.split('+')[0];
+                } else if (dateStr.includes('-') && dateStr.lastIndexOf('-') > 4) {
+                    // Se tem mais de um '-', pode ter timezone (ex: -03:00)
+                    const parts = dateStr.split('-');
+                    if (parts.length > 3) {
+                        dateStr = parts.slice(0, 3).join('-');
+                    }
+                }
+                
+                // Formatar para DD/MM/YYYY
+                if (dateStr && dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                    const [ano, mes, dia] = dateStr.split('-');
+                    createdDate = `${dia}/${mes}/${ano}`;
+                } else {
+                    createdDate = 'N/A';
+                }
+            } catch (e) {
+                console.error('Erro ao formatar data:', e, link.created_at);
+                createdDate = 'N/A';
+            }
+        }
         const trackingUrl = `${window.location.origin}/r/${link.identifier}`;
         
         return `
@@ -251,7 +309,11 @@ function renderizarLinks(links) {
                     </a>
                 </td>
                 <td>${link.ponto_dooh}</td>
-                <td>${link.campanha}</td>
+                <td>
+                    ${link.campanha}
+                    ${link.tipo_midia ? `<br><small style="color: var(--text-secondary); font-size: 0.875rem;">📺 ${link.tipo_midia}</small>` : ''}
+                    ${link.local_especifico ? `<br><small style="color: var(--text-secondary); font-size: 0.875rem;">📍 ${link.local_especifico}</small>` : ''}
+                </td>
                 <td><strong>${link.total_clicks || 0}</strong></td>
                 <td>${createdDate}</td>
                 <td class="acoes-cell">
@@ -338,6 +400,9 @@ async function carregarAnalytics() {
         
         // Renderizar top links
         renderizarTopLinks(data.top_links);
+        
+        // Carregar métricas de conversão
+        carregarMetricasConversao();
     } catch (error) {
         console.error('Erro ao carregar analytics:', error);
         alert('Erro ao carregar analytics: ' + error.message);
@@ -371,7 +436,16 @@ function renderizarGraficos(data) {
             },
             options: {
                 responsive: true,
-                maintainAspectRatio: false
+                maintainAspectRatio: true,
+                aspectRatio: 2,
+                layout: {
+                    padding: {
+                        top: 10,
+                        bottom: 10,
+                        left: 10,
+                        right: 10
+                    }
+                }
             }
         });
     }
@@ -402,7 +476,16 @@ function renderizarGraficos(data) {
             },
             options: {
                 responsive: true,
-                maintainAspectRatio: false
+                maintainAspectRatio: true,
+                aspectRatio: 1.5,
+                layout: {
+                    padding: {
+                        top: 10,
+                        bottom: 10,
+                        left: 10,
+                        right: 10
+                    }
+                }
             }
         });
     }
@@ -429,10 +512,137 @@ function renderizarGraficos(data) {
             },
             options: {
                 responsive: true,
-                maintainAspectRatio: false,
+                maintainAspectRatio: true,
+                aspectRatio: 2,
+                layout: {
+                    padding: {
+                        top: 10,
+                        bottom: 10,
+                        left: 10,
+                        right: 10
+                    }
+                },
                 scales: {
                     y: {
                         beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+}
+
+async function carregarMetricasConversao() {
+    try {
+        const startDate = document.getElementById('filter-start-date')?.value || '';
+        const endDate = document.getElementById('filter-end-date')?.value || '';
+        
+        const params = new URLSearchParams();
+        if (startDate) params.append('start_date', startDate);
+        if (endDate) params.append('end_date', endDate);
+        
+        const response = await fetch(`/api/analytics/conversions?${params.toString()}`);
+        const data = await response.json();
+        
+        // Atualizar métricas de conversão
+        document.getElementById('metric-conversion-rate').textContent = `${data.conversion_rate || 0}%`;
+        document.getElementById('metric-total-conversions').textContent = data.total_conversions || 0;
+        document.getElementById('metric-avg-time-on-page').textContent = `${Math.round(data.average_time_on_page || 0)}s`;
+        
+        // Renderizar gráficos de conversão
+        renderizarGraficosConversao(data);
+    } catch (error) {
+        console.error('Erro ao carregar métricas de conversão:', error);
+    }
+}
+
+function renderizarGraficosConversao(data) {
+    // Gráfico: Eventos de Conversão por Tipo
+    const ctxEvents = document.getElementById('chart-conversion-events');
+    if (ctxEvents) {
+        if (charts['conversion-events']) {
+            charts['conversion-events'].destroy();
+        }
+        
+        const eventTypes = Object.keys(data.events_by_type || {});
+        const eventCounts = Object.values(data.events_by_type || {});
+        
+        charts['conversion-events'] = new Chart(ctxEvents, {
+            type: 'bar',
+            data: {
+                labels: eventTypes,
+                datasets: [{
+                    label: 'Eventos',
+                    data: eventCounts,
+                    backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                aspectRatio: 2,
+                layout: {
+                    padding: {
+                        top: 10,
+                        bottom: 10,
+                        left: 10,
+                        right: 10
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+    
+    // Gráfico: Scroll Depth
+    const ctxScroll = document.getElementById('chart-scroll-depth');
+    if (ctxScroll) {
+        if (charts['scroll-depth']) {
+            charts['scroll-depth'].destroy();
+        }
+        
+        const scrollStats = data.scroll_depth_stats || {};
+        const depths = ['25', '50', '75', '100'];
+        const counts = depths.map(d => scrollStats[d] || 0);
+        
+        charts['scroll-depth'] = new Chart(ctxScroll, {
+            type: 'doughnut',
+            data: {
+                labels: depths.map(d => `${d}%`),
+                datasets: [{
+                    label: 'Scroll Depth',
+                    data: counts,
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.6)',
+                        'rgba(54, 162, 235, 0.6)',
+                        'rgba(255, 206, 86, 0.6)',
+                        'rgba(75, 192, 192, 0.6)'
+                    ],
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                aspectRatio: 1.5,
+                layout: {
+                    padding: {
+                        top: 10,
+                        bottom: 10,
+                        left: 10,
+                        right: 10
                     }
                 }
             }

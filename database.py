@@ -1,7 +1,9 @@
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.types import DateTime
 import os
+from timezone_utils import agora_brasil
 
 # Caminho do banco de dados SQLite
 SQLALCHEMY_DATABASE_URL = "sqlite:///./conteudooh.db"

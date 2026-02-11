@@ -137,6 +137,76 @@
                                 <input type="text" id="link-campanha" required maxlength="200" 
                                        placeholder="ex: Promoção de Verão 2024">
                             </div>
+                            
+                            <hr style="margin: 1.5rem 0; border: none; border-top: 1px solid var(--border-color);">
+                            <h4 style="margin-bottom: 1rem; color: var(--text-primary);">📋 Dados de Campanha OOH (Opcional)</h4>
+                            
+                            <div class="form-group">
+                                <label for="link-qr-code-id">QR Code ID (único por ponto):</label>
+                                <input type="text" id="link-qr-code-id" maxlength="200" 
+                                       placeholder="ex: qr-rodoviaria-001">
+                                <small style="color: var(--text-secondary); font-size: 0.875rem;">Deixe vazio para auto-gerar</small>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="link-tipo-midia">Tipo de Mídia:</label>
+                                <select id="link-tipo-midia" style="width: 100%; padding: 0.75rem 1rem; border: 2px solid var(--border-color); border-radius: var(--border-radius-sm); font-size: 0.9375rem;">
+                                    <option value="">Selecione...</option>
+                                    <option value="Outdoor">Outdoor</option>
+                                    <option value="Frontlight">Frontlight</option>
+                                    <option value="LED">LED</option>
+                                    <option value="Backlight">Backlight</option>
+                                    <option value="Transit">Transit</option>
+                                    <option value="DOOH">DOOH</option>
+                                    <option value="Outro">Outro</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="link-local-especifico">Local Específico:</label>
+                                <input type="text" id="link-local-especifico" maxlength="200" 
+                                       placeholder="ex: BR-230, km 45 ou Centro, Painel X">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="link-peca-criativa">Peça Criativa:</label>
+                                <input type="text" id="link-peca-criativa" maxlength="200" 
+                                       placeholder="ex: Arte Versão A ou Criativo 001">
+                            </div>
+                            
+                            <hr style="margin: 1.5rem 0; border: none; border-top: 1px solid var(--border-color);">
+                            <h4 style="margin-bottom: 1rem; color: var(--text-primary);">🔗 UTMs (Opcional - Auto-preenchidos se vazios)</h4>
+                            
+                            <div class="form-group">
+                                <label for="link-utm-source">UTM Source:</label>
+                                <input type="text" id="link-utm-source" maxlength="100" 
+                                       placeholder="ex: ooh ou dooh (padrão: ooh)">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="link-utm-medium">UTM Medium:</label>
+                                <input type="text" id="link-utm-medium" maxlength="100" 
+                                       placeholder="ex: outdoor, led, frontlight (padrão: tipo de mídia)">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="link-utm-campaign">UTM Campaign:</label>
+                                <input type="text" id="link-utm-campaign" maxlength="200" 
+                                       placeholder="ex: Nome da campanha (padrão: usa campo Campanha)">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="link-utm-content">UTM Content:</label>
+                                <input type="text" id="link-utm-content" maxlength="200" 
+                                       placeholder="ex: ID da peça criativa (padrão: QR Code ID)">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="link-utm-term">UTM Term (opcional):</label>
+                                <input type="text" id="link-utm-term" maxlength="200" 
+                                       placeholder="ex: Termo de busca">
+                            </div>
+                            
                             <button type="submit" class="btn btn-primary">Criar Link</button>
                         </form>
                     </div>
@@ -206,8 +276,47 @@
                         </div>
                     </div>
 
+                    <!-- Métricas de Conversão -->
+                    <div class="conversion-metrics-section" style="margin-top: 2rem;">
+                        <h3>🎯 Métricas de Conversão</h3>
+                        <div class="stats-bar">
+                            <div class="stat-card">
+                                <div class="stat-value" id="metric-conversion-rate">0%</div>
+                                <div class="stat-label">Taxa de Conversão</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="metric-total-conversions">0</div>
+                                <div class="stat-label">Total de Conversões</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="metric-avg-time-on-page">0s</div>
+                                <div class="stat-label">Tempo Médio na Página</div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Gráficos -->
                     <div class="charts-container">
+                        <div class="chart-wrapper">
+                            <h4>📈 Cliques por Dia</h4>
+                            <canvas id="chart-clicks-by-day"></canvas>
+                        </div>
+                        <div class="chart-wrapper">
+                            <h4>🌍 Cliques por País</h4>
+                            <canvas id="chart-clicks-by-country"></canvas>
+                        </div>
+                        <div class="chart-wrapper">
+                            <h4>📱 Cliques por Dispositivo</h4>
+                            <canvas id="chart-clicks-by-device"></canvas>
+                        </div>
+                        <div class="chart-wrapper">
+                            <h4>🎯 Eventos de Conversão</h4>
+                            <canvas id="chart-conversion-events"></canvas>
+                        </div>
+                        <div class="chart-wrapper">
+                            <h4>📊 Scroll Depth</h4>
+                            <canvas id="chart-scroll-depth"></canvas>
+                        </div>
                         <div class="chart-card">
                             <h3>Cliques por Dia</h3>
                             <canvas id="chart-clicks-by-day"></canvas>
@@ -219,6 +328,14 @@
                         <div class="chart-card">
                             <h3>Cliques por País</h3>
                             <canvas id="chart-clicks-by-country"></canvas>
+                        </div>
+                        <div class="chart-card">
+                            <h3>🎯 Eventos de Conversão</h3>
+                            <canvas id="chart-conversion-events"></canvas>
+                        </div>
+                        <div class="chart-card">
+                            <h3>📊 Scroll Depth</h3>
+                            <canvas id="chart-scroll-depth"></canvas>
                         </div>
                     </div>
 
