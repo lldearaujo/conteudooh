@@ -1189,10 +1189,24 @@ body {
         max-height: 30%;
     }
     
-    .noticia-conteudo-imagem .noticia-titulo {
-        font-size: clamp(11px, 3.8vw + 5.7vh, 22px);
+    /* Aumenta área de texto e reduz padding para caber 2-3 linhas de título */
+    .noticia-conteudo-imagem {
+        height: 60% !important;
+        max-height: 60% !important;
+        padding-top: 3px !important;
+        padding-bottom: 3px !important;
+        padding-left: clamp(4px, 0.8vw, 8px) !important;
+        padding-right: clamp(4px, 0.8vw, 8px) !important;
+        gap: 1px !important;
     }
     
+    /* Resolve para ~14px: 3.5*2.88 + 4*1.92 = 10.1 + 7.7 = 17.8 → max 14px */
+    .noticia-conteudo-imagem .noticia-titulo {
+        font-size: clamp(10px, 3.5vw + 4vh, 14px) !important;
+        line-height: 1.15 !important;
+    }
+    
+    /* Resolve para ~11px: 2.4*2.88 + 3.6*1.92 = 6.9 + 6.9 = 13.8 → max 11px */
     .noticia-conteudo-imagem .noticia-data {
         font-size: clamp(7px, 2.4vw + 3.6vh, 11px);
     }
