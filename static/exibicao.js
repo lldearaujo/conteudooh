@@ -398,21 +398,27 @@ function ajustarTamanhoFonte(elemento) {
             
             // Verificação final - garantir que não há texto cortado
             setTimeout(() => {
-                const alturaFinal = elemento.scrollHeight;
-                const larguraFinal = elemento.scrollWidth;
-                const alturaAtual = elemento.clientHeight;
-                const larguraAtual = elemento.clientWidth;
-                
-                // Se ainda está cortando, reduzir mais, mas respeitando o mínimo
-                if (alturaFinal > alturaAtual || larguraFinal > larguraAtual) {
-                    let tamanhoAtual = parseFloat(elemento.style.fontSize) || tamanhoMinimo;
-                    const minimoFinal = telaMuitoPequena ? Math.max(tamanhoMinimo, 7) : Math.max(tamanhoMinimo, 12);
-                    const reducaoFinal = telaMuitoPequena ? 0.2 : 0.3;
-                    while (tamanhoAtual > minimoFinal && (alturaFinal > alturaAtual || larguraFinal > larguraAtual)) {
-                        tamanhoAtual -= reducaoFinal;
-                        elemento.style.fontSize = `${Math.max(tamanhoAtual, minimoFinal)}px`;
-                        elemento.offsetHeight;
+                const minimoFinal = telaMuitoPequena ? Math.max(tamanhoMinimo, 7) : Math.max(tamanhoMinimo, 12);
+                const reducaoFinal = telaMuitoPequena ? 0.2 : 0.3;
+                let tamanhoAtual = parseFloat(elemento.style.fontSize) || tamanhoMinimo;
+                let tentativasVerif = 0;
+                const maxTentativasVerif = 100;
+
+                // Re-lê dimensões a cada iteração para realmente verificar se coube
+                while (tamanhoAtual > minimoFinal && tentativasVerif < maxTentativasVerif) {
+                    elemento.offsetHeight;
+                    const alturaAtual = elemento.clientHeight;
+                    const larguraAtual = elemento.clientWidth;
+                    const alturaConteudo = elemento.scrollHeight;
+                    const larguraConteudo = elemento.scrollWidth;
+
+                    if (alturaConteudo <= alturaAtual && larguraConteudo <= larguraAtual) {
+                        break; // texto cabe, parar
                     }
+
+                    tamanhoAtual -= reducaoFinal;
+                    elemento.style.fontSize = `${Math.max(tamanhoAtual, minimoFinal)}px`;
+                    tentativasVerif++;
                 }
             }, 50);
         });
