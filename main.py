@@ -78,33 +78,46 @@ async def tela_exibicao(request: Request, db: Session = Depends(get_db)):
 
 @app.get("/api/noticias/aleatoria")
 async def obter_noticia_aleatoria(db: Session = Depends(get_db)):
-    """Retorna uma notícia aleatória ativa dos últimos 2 dias
+    """Retorna uma notícia aleatória ativa.
     
-    Regra de frescor:
-    - Tenta usar data_publicacao quando existir
-    - Se não houver data_publicacao, usa data_criacao
+    Busca em cascata para evitar tela em branco:
+    1. Últimos 2 dias  (ideal)
+    2. Últimos 7 dias  (fallback)
+    3. Qualquer notícia ativa (último recurso)
     """
     import random
-    limite_dias = 2
-    limite_data = agora_brasil() - timedelta(days=limite_dias)
 
-    # Notícias com data_publicacao recente
-    noticias = (
-        db.query(Noticia)
-        .filter(
-            Noticia.ativa == True,
-            (
-                # Usa data_publicacao quando existir
-                ((Noticia.data_publicacao != None) & (Noticia.data_publicacao >= limite_data))
-                |
-                # Fallback: quando não há data_publicacao, considera data_criacao
-                ((Noticia.data_publicacao == None) & (Noticia.data_criacao != None) & (Noticia.data_criacao >= limite_data))
+    def _query_por_periodo(dias):
+        limite_data = agora_brasil() - timedelta(days=dias)
+        return (
+            db.query(Noticia)
+            .filter(
+                Noticia.ativa == True,
+                (
+                    ((Noticia.data_publicacao != None) & (Noticia.data_publicacao >= limite_data))
+                    |
+                    ((Noticia.data_publicacao == None) & (Noticia.data_criacao != None) & (Noticia.data_criacao >= limite_data))
+                )
             )
+            .all()
         )
-        .all()
-    )
+
+    # 1ª tentativa: últimos 2 dias
+    noticias = _query_por_periodo(2)
+
+    # 2ª tentativa: últimos 7 dias
     if not noticias:
-        raise HTTPException(status_code=404, detail="Nenhuma notícia ativa encontrada")
+        logger.warning("Nenhuma notícia nos últimos 2 dias — tentando últimos 7 dias")
+        noticias = _query_por_periodo(7)
+
+    # 3ª tentativa: qualquer notícia ativa (sem filtro de data)
+    if not noticias:
+        logger.warning("Nenhuma notícia nos últimos 7 dias — buscando qualquer notícia ativa")
+        noticias = db.query(Noticia).filter(Noticia.ativa == True).all()
+
+    if not noticias:
+        raise HTTPException(status_code=404, detail="Nenhuma notícia ativa encontrada no banco de dados")
+
     noticia = random.choice(noticias)
     return noticia.to_dict()
 
