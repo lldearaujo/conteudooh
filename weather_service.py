@@ -308,7 +308,7 @@ class WeatherService:
                 params["country"] = pais
 
             headers = {
-                "User-Agent": "ConteudoOH/1.0 (clima@conteudooh.local)"
+                "User-Agent": "ConteudoOH/1.0 (clima@conteudooh.sacomunicacao.com.br)"
             }
 
             response = requests.get(GEO_API_URL, params=params, headers=headers, timeout=10)

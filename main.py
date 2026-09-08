@@ -34,9 +34,18 @@ Base.metadata.create_all(bind=engine)
 app = FastAPI(title="ConteudoOH - Sistema de Mídia Indoor/DOOH")
 
 # Configurar CORS
+ALLOWED_ORIGINS = [
+    "https://conteudooh.sacomunicacao.com.br",
+    "http://conteudooh.sacomunicacao.com.br",
+    "http://localhost:8080",
+    "http://localhost:8000",
+    "http://127.0.0.1:8080",
+    "http://127.0.0.1:8000",
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Em produção, especificar origins
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
