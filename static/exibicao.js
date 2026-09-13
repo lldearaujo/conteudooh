@@ -51,9 +51,12 @@ function exibirNoticia(noticia) {
     // Ajustar tamanho da fonte apenas em telas pequenas (painéis / resoluções reduzidas)
     const larguraTelaInicial = window.innerWidth || document.documentElement.clientWidth || screen.width;
     const alturaTelaInicial = window.innerHeight || document.documentElement.clientHeight || screen.height;
+    // Painéis muito largos (ex.: 1024x410) têm altura como recurso escasso,
+    // mesmo com largura grande, então também precisam do ajuste de fonte.
     const deveAjustarFonte =
         larguraTelaInicial <= 480 ||
-        alturaTelaInicial <= 400;
+        alturaTelaInicial <= 600 ||
+        (alturaTelaInicial > 0 && larguraTelaInicial / alturaTelaInicial >= 2);
 
     if (deveAjustarFonte) {
         ajustarTamanhoFonte(tituloElement);
@@ -393,7 +396,17 @@ function ajustarTamanhoFonte(elemento) {
                 elemento.style.lineHeight = telaMuitoPequena ? '1.05' : '1.1';
             }
             
-            elemento.style.maxHeight = `${alturaDisponivel}px`;
+            // Limita a altura a um número inteiro de linhas. Sem esse arredondamento
+            // a área disponível corta a última linha no meio quando não é múltipla
+            // exata da altura de linha.
+            const limitarLinhasInteiras = () => {
+                const fonte = parseFloat(elemento.style.fontSize) || tamanhoMinimo;
+                const alturaLinha = fonte * (parseFloat(elemento.style.lineHeight) || 1.2);
+                const linhas = Math.max(1, Math.floor(alturaDisponivel / alturaLinha));
+                elemento.style.maxHeight = `${linhas * alturaLinha}px`;
+            };
+
+            limitarLinhasInteiras();
             elemento.style.overflow = 'hidden';
             
             // Verificação final - garantir que não há texto cortado
@@ -420,6 +433,9 @@ function ajustarTamanhoFonte(elemento) {
                     elemento.style.fontSize = `${Math.max(tamanhoAtual, minimoFinal)}px`;
                     tentativasVerif++;
                 }
+
+                // Reaplica o corte por linhas inteiras com a fonte final
+                limitarLinhasInteiras();
             }, 50);
         });
     });
@@ -437,7 +453,8 @@ window.addEventListener('resize', () => {
         const alturaTela = window.innerHeight || document.documentElement.clientHeight || screen.height;
         const deveAjustarFonte =
             larguraTela <= 480 ||
-            alturaTela <= 400;
+            alturaTela <= 600 ||
+            (alturaTela > 0 && larguraTela / alturaTela >= 2);
 
         if (deveAjustarFonte) {
             ajustarTamanhoFonte(tituloElement);

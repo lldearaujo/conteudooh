@@ -1391,16 +1391,17 @@ body {
     
     .noticia-conteudo-imagem {
         padding: clamp(6px, 1.2vw + 1vh, 16px);
-        padding-top: clamp(14px, 2.5vw + 2.5vh, 35px);
-        padding-bottom: clamp(14px, 2.5vw + 2.5vh, 35px);
-        gap: clamp(2px, 0.4vh, 5px);
-        height: 50%;
-        max-height: 50%;
+        padding-top: clamp(4px, 1vh, 10px);
+        padding-bottom: clamp(4px, 1vh, 10px);
+        gap: clamp(1px, 0.3vh, 3px);
+        height: 62%;
+        max-height: 62%;
         bottom: 0;
     }
     
     .noticia-conteudo-imagem .noticia-titulo {
         font-size: clamp(12px, 2.8vw + 1.2vh, 24px);
+        line-height: 1.2;
     }
     
     .footer-fixed-bottom {
@@ -1428,6 +1429,31 @@ body {
     .qrcode-image {
         width: clamp(48px, 8.4vw + 1.8vh, 96px);
         height: clamp(48px, 8.4vw + 1.8vh, 96px);
+    }
+}
+
+/* Painéis horizontais largos (ex.: 1024x410, 1024x384, 768x384).
+   Sobra largura e falta altura, então a fonte é dimensionada
+   principalmente por vh e a área de texto recebe folga extra. */
+@media (orientation: landscape) and (max-height: 500px) and (min-width: 600px) {
+    .noticia-conteudo-imagem {
+        height: 62%;
+        max-height: 62%;
+        padding-top: clamp(3px, 0.8vh, 8px);
+        padding-bottom: clamp(3px, 0.8vh, 8px);
+        padding-left: clamp(8px, 1.5vw, 24px);
+        padding-right: clamp(8px, 1.5vw, 24px);
+        gap: clamp(1px, 0.3vh, 3px);
+        bottom: 0;
+    }
+
+    .noticia-conteudo-imagem .noticia-data {
+        font-size: clamp(10px, 0.9vw + 1vh, 18px);
+    }
+
+    .noticia-conteudo-imagem .noticia-titulo {
+        font-size: clamp(12px, 1.2vw + 2.2vh, 26px);
+        line-height: 1.2;
     }
 }
 
